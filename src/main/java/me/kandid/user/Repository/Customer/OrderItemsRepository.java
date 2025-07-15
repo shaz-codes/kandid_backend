@@ -7,7 +7,7 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface OrderItemsRepository extends JpaRepository<OrderItems, Long> {
+public interface OrderItemsRepository extends JpaRepository<OrderItems, String> {
     List<OrderItems> getAllByProductSku(String productSku);
 
     long countByProductSku(String productSku);

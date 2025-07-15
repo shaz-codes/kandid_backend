@@ -9,16 +9,16 @@ import lombok.Data;
 
 @Entity
 @Data
-@Schema(name = "Cart Items", description = "Product with it's quantity")
+@Schema(title = "Cart Items", description = "Product with it's quantity")
 public class CartItems {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Schema(name = "Randomly generated id", description = "Randomly generated id for internal tracking")
+    @Schema(title = "Randomly generated id", description = "Randomly generated id for internal tracking")
     private long id;
-    @Schema(name = "Customer's Phone", description = "Customer's Phone, used internally")
+    @Schema(title = "Customer's Phone", description = "Customer's Phone, used internally")
     private long customerPhone;
-    @Schema(name = "SKU", description = "Unique Product Code with Size seperated by -", example = "PROD001-M")
+    @Schema(title = "SKU", description = "Unique Product Code with Size seperated by -", example = "PROD001-M")
     private String productSku;
-    @Schema(name = "Quantity of product of the specified SKU", example = "3")
+    @Schema(title = "Quantity of product of the specified SKU", example = "3")
     private int quantity;
 }

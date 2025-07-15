@@ -8,7 +8,7 @@ import lombok.Data;
 
 @Data
 @Entity
-@Schema(description = "Product variant representing different sizes and inventory for a product")
+@Schema(title = "Product Variant", description = "Product variant representing different sizes and inventory for a product")
 public class ProductVariant {
     @Id
     @Schema(description = "Unique SKU (Stock Keeping Unit) identifier", example = "PROD001-M")
