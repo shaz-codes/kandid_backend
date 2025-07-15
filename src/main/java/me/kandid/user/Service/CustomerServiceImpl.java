@@ -1,6 +1,6 @@
 package me.kandid.user.Service;
 
-import com.fasterxml.jackson.databind.*;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import me.kandid.user.Model.Customer.*;
 import me.kandid.user.Model.MessageCentral.Response;
 import me.kandid.user.Model.Product.Product;
@@ -49,11 +49,11 @@ public class CustomerServiceImpl implements CustomerService {
     public String sendOTP(String phone) throws IOException, InterruptedException {
         HttpClient client = HttpClient.newBuilder().build();
         HttpRequest body = HttpRequest.newBuilder().POST(HttpRequest.BodyPublishers.noBody()).setHeader("authToken",
-                "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJDLTlENkE1QzJDREE0MTQ5MSIsImlhdCI6MTc0NDAwNzM1MywiZXhwIjoxOTAxNjg3MzUzfQ.c7RSTI2P2O-YHp2bhum2jmv5vDILN74tEiQmIYKzn1YicnbC4XmKDXwMMKpFTzdsYMITg5oA8Tq6z7XWTkapuw")
-                .uri(URI.create(
-                        "https://cpaas.messagecentral.com/verification/v3/send?countryCode=91&flowType=SMS&mobileNumber="
-                                + phone))
-                .build();
+                                              "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJDLTlENkE1QzJDREE0MTQ5MSIsImlhdCI6MTc0NDAwNzM1MywiZXhwIjoxOTAxNjg3MzUzfQ.c7RSTI2P2O-YHp2bhum2jmv5vDILN74tEiQmIYKzn1YicnbC4XmKDXwMMKpFTzdsYMITg5oA8Tq6z7XWTkapuw")
+                                      .uri(URI.create(
+                                              "https://cpaas.messagecentral.com/verification/v3/send?countryCode=91&flowType=SMS&mobileNumber="
+                                                      + phone))
+                                      .build();
         HttpResponse<String> res = client.send(body, HttpResponse.BodyHandlers.ofString());
         ObjectMapper mapper = new ObjectMapper();
         Response re = mapper.readValue(res.body(), Response.class);
@@ -68,10 +68,11 @@ public class CustomerServiceImpl implements CustomerService {
     public long verifyOTP(String id, String code) throws Exception {
         HttpClient client = HttpClient.newBuilder().build();
         HttpRequest body = HttpRequest.newBuilder().GET().setHeader("authToken",
-                "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJDLTlENkE1QzJDREE0MTQ5MSIsImlhdCI6MTc0NDAwNzM1MywiZXhwIjoxOTAxNjg3MzUzfQ.c7RSTI2P2O-YHp2bhum2jmv5vDILN74tEiQmIYKzn1YicnbC4XmKDXwMMKpFTzdsYMITg5oA8Tq6z7XWTkapuw")
-                .uri(URI.create("https://cpaas.messagecentral.com/verification/v3/validateOtp?&verificationId=" + id
-                        + "&code=" + code))
-                .build();
+                                              "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJDLTlENkE1QzJDREE0MTQ5MSIsImlhdCI6MTc0NDAwNzM1MywiZXhwIjoxOTAxNjg3MzUzfQ.c7RSTI2P2O-YHp2bhum2jmv5vDILN74tEiQmIYKzn1YicnbC4XmKDXwMMKpFTzdsYMITg5oA8Tq6z7XWTkapuw")
+                                      .uri(URI.create(
+                                              "https://cpaas.messagecentral.com/verification/v3/validateOtp?&verificationId=" + id
+                                                      + "&code=" + code))
+                                      .build();
         HttpResponse<String> res = client.send(body, HttpResponse.BodyHandlers.ofString());
         //
         // String ex ="{\n" +
@@ -87,27 +88,16 @@ public class CustomerServiceImpl implements CustomerService {
         // " \"authToken\": null\n" +
         // " }\n" +
         // "}";
-
+        System.out.println(res.body() + "\n" + res.statusCode());
         ObjectMapper mapper = new ObjectMapper();
         Response re = mapper.readValue(res.body(), Response.class);
-
-        if (re.getResponseCode() != 200)
-            throw new Exception(re.getMessage());
-
-        if (re.getData().getResponseCode() != 200)
-            throw new Exception(re.getMessage());
-
-        if (re.getData().getMobileNumber() != 0)
-            return re.getData().getMobileNumber();
-
-        OtpLogin otp = otpLoginRepository.findByVerificationId(re.getData().getVerificationId());
-
-        if (otp == null)
-            throw new Exception(
-                    "Internal Server Error: Possible cause is the verificationID return from MessageCentral was not found in DB");
-
-        return otp.getPhone();
-
+        if (res.statusCode() == 200) {
+            if (re.getResponseCode() == 200) {
+                return otpLoginRepository.findByVerificationId(re.getData().getVerificationId()).getPhone();
+            } else throw new Exception(re.getMessage());
+        } else if (res.statusCode() == 401) {
+            throw new Exception("MessageCentral Authentication Failed");
+        } else throw new Exception(re.getMessage());
     }
 
     @Override

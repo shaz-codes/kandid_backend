@@ -3,7 +3,6 @@ package me.kandid.user.Controller.Customer;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.interfaces.DecodedJWT;
-
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -24,7 +23,10 @@ import java.time.Instant;
 @RestController
 @RequestMapping("otp")
 @CrossOrigin
-@Tag(name = "Customer Authentication", description = "Endpoints for customer authentication using OTP (One Time Password)")
+@Tag(
+        name = "Customer Authentication",
+        description = "Endpoints for customer authentication using OTP (One Time Password)"
+)
 public class CustomerAuthController {
     @Autowired
     private CustomerService customerService;
@@ -39,11 +41,30 @@ public class CustomerAuthController {
     }
 
     @GetMapping("send")
-    @Operation(summary = "Send OTP", description = "Sends a One Time Password (OTP) to the customer's phone number for authentication.")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "OTP sent successfully", content = @Content(mediaType = "text/plain", schema = @Schema(implementation = String.class))),
-            @ApiResponse(responseCode = "500", description = "Internal server error, contact me about it", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class)))
-    })
+    @Operation(
+            summary = "Send OTP",
+            description = "Sends a One Time Password (OTP) to the customer's phone number for authentication."
+    )
+    @ApiResponses(
+            value = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "OTP sent successfully",
+                            content = @Content(
+                                    mediaType = "text/plain",
+                                    schema = @Schema(implementation = String.class)
+                            )
+                    ),
+                    @ApiResponse(
+                            responseCode = "500",
+                            description = "Internal server error, contact me about it",
+                            content = @Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(implementation = String.class)
+                            )
+                    )
+            }
+    )
     public ResponseEntity<String> otpSend(@RequestParam String phone) {
         String id;
         try {
@@ -55,25 +76,45 @@ public class CustomerAuthController {
     }
 
     @GetMapping("verify")
-    @Operation(summary = "Verify OTP", description = "Verifies the One Time Password (OTP) sent to the customer's phone number and returns a JWT token.")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "OTP verified successfully, JWT token returned", content = @Content(mediaType = "application/json", schema = @Schema(implementation = OtpVerifyResponse.class))),
-            @ApiResponse(responseCode = "500", description = "Internal server error, contact me about it", content = @Content(mediaType = "application/json", schema = @Schema(implementation = OtpVerifyResponse.class)))
-    })
-    public ResponseEntity<OtpVerifyResponse> otpVerify(@RequestParam String id, @RequestParam String code) {
+    @Operation(
+            summary = "Verify OTP",
+            description = "Verifies the One Time Password (OTP) sent to the customer's phone number and returns a JWT" +
+                    " token, based on the value of the accountExists we take the details of the user"
+    )
+    @ApiResponses(
+            value = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "OTP verified successfully, JWT token returned",
+                            content = @Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(implementation = OtpVerifyResponse.class)
+                            )
+                    ),
+                    @ApiResponse(
+                            responseCode = "500",
+                            description = "Internal server error, contact me about it",
+                            content = @Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(implementation = OtpVerifyResponse.class)
+                            )
+                    )
+            }
+    )
+    public ResponseEntity<?> otpVerify(@RequestParam String id, @RequestParam String code) {
         long phone;
         try {
             phone = customerService.verifyOTP(id, code);
         } catch (Exception e) {
-            return new ResponseEntity<>(new OtpVerifyResponse(null, e.getMessage(), null),
+            return new ResponseEntity<>(new OtpVerifyResponse(null, e.getMessage(), false),
                     HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
         String jwt = JWT.create()
-                .withIssuer("Kandid User")
-                .withSubject(String.valueOf(phone))
-                .withExpiresAt(Instant.now().plusSeconds(2678400))
-                .sign(Algorithm.HMAC256(System.getenv("ENCRYPT_KEY_KANDID")));
+                        .withIssuer("Kandid User")
+                        .withSubject(String.valueOf(phone))
+                        .withExpiresAt(Instant.now().plusSeconds(2678400))
+                        .sign(Algorithm.HMAC256(System.getenv("ENCRYPT_KEY_KANDID")));
 
         return new ResponseEntity<>(new OtpVerifyResponse(jwt, null, customerService.customerExist(phone)),
                 HttpStatus.OK);
