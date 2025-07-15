@@ -32,7 +32,8 @@ public class ProductController {
     @GetMapping(value = "all")
     @Operation(
             summary = "Get All Products",
-            description = "Retrieve a complete list of all available products in the system. This endpoint returns all active products with their details including pricing, brand information, and product specifications."
+            description = "Retrieve a complete list of all available products in the system. This endpoint returns all " +
+                    "active products with their details including pricing, brand information, and product variants."
     )
     @ApiResponses(
             value = {
