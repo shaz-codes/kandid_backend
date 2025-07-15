@@ -1,6 +1,8 @@
 package me.kandid.user.Service;
 
+import com.fasterxml.jackson.databind.*;
 import me.kandid.user.Model.Customer.*;
+import me.kandid.user.Model.MessageCentral.Response;
 import me.kandid.user.Model.Product.Product;
 import me.kandid.user.Repository.Customer.*;
 import me.kandid.user.Repository.ProductRepository;
@@ -35,34 +37,82 @@ public class CustomerServiceImpl implements CustomerService {
     @Autowired
     private ProductRepository productRepository;
 
+    @Autowired
+    private OtpLoginRepository otpLoginRepository;
+
     @Override
     public Customer getCustomer(long phone) {
         return customerRepository.getCustomerByPhone(phone);
     }
 
     @Override
-    public String sendOTP(long phone) throws IOException, InterruptedException {
+    public String sendOTP(String phone) throws IOException, InterruptedException {
         HttpClient client = HttpClient.newBuilder().build();
-        HttpRequest body = HttpRequest.newBuilder().POST(HttpRequest.BodyPublishers.noBody()).setHeader("authToken","eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJDLTlENkE1QzJDREE0MTQ5MSIsImlhdCI6MTc0NDAwNzM1MywiZXhwIjoxOTAxNjg3MzUzfQ.c7RSTI2P2O-YHp2bhum2jmv5vDILN74tEiQmIYKzn1YicnbC4XmKDXwMMKpFTzdsYMITg5oA8Tq6z7XWTkapuw").uri(URI.create("https://cpaas.messagecentral.com/verification/v3/send?countryCode=91&flowType=SMS&mobileNumber=" + phone)).build();
+        HttpRequest body = HttpRequest.newBuilder().POST(HttpRequest.BodyPublishers.noBody()).setHeader("authToken",
+                "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJDLTlENkE1QzJDREE0MTQ5MSIsImlhdCI6MTc0NDAwNzM1MywiZXhwIjoxOTAxNjg3MzUzfQ.c7RSTI2P2O-YHp2bhum2jmv5vDILN74tEiQmIYKzn1YicnbC4XmKDXwMMKpFTzdsYMITg5oA8Tq6z7XWTkapuw")
+                .uri(URI.create(
+                        "https://cpaas.messagecentral.com/verification/v3/send?countryCode=91&flowType=SMS&mobileNumber="
+                                + phone))
+                .build();
         HttpResponse<String> res = client.send(body, HttpResponse.BodyHandlers.ofString());
-//        System.out.println(res.body());
-        // TODO decode res to return verification id
-        return res.body();
+        ObjectMapper mapper = new ObjectMapper();
+        Response re = mapper.readValue(res.body(), Response.class);
+        OtpLogin otp = new OtpLogin();
+        otp.setPhone(re.getData().getMobileNumber());
+        otp.setVerificationId(re.getData().getVerificationId());
+        otpLoginRepository.save(otp);
+        return String.valueOf(re.getData().getVerificationId());
     }
 
     @Override
-    public String verifyOTP(String id, String code) throws IOException, InterruptedException {
+    public long verifyOTP(String id, String code) throws Exception {
         HttpClient client = HttpClient.newBuilder().build();
-        HttpRequest body = HttpRequest.newBuilder().GET().setHeader("authToken","eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJDLTlENkE1QzJDREE0MTQ5MSIsImlhdCI6MTc0NDAwNzM1MywiZXhwIjoxOTAxNjg3MzUzfQ.c7RSTI2P2O-YHp2bhum2jmv5vDILN74tEiQmIYKzn1YicnbC4XmKDXwMMKpFTzdsYMITg5oA8Tq6z7XWTkapuw").uri(URI.create("https://cpaas.messagecentral.com/verification/v3/validateOtp?&verificationId="+ id + "&code=" + code)).build();
+        HttpRequest body = HttpRequest.newBuilder().GET().setHeader("authToken",
+                "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJDLTlENkE1QzJDREE0MTQ5MSIsImlhdCI6MTc0NDAwNzM1MywiZXhwIjoxOTAxNjg3MzUzfQ.c7RSTI2P2O-YHp2bhum2jmv5vDILN74tEiQmIYKzn1YicnbC4XmKDXwMMKpFTzdsYMITg5oA8Tq6z7XWTkapuw")
+                .uri(URI.create("https://cpaas.messagecentral.com/verification/v3/validateOtp?&verificationId=" + id
+                        + "&code=" + code))
+                .build();
         HttpResponse<String> res = client.send(body, HttpResponse.BodyHandlers.ofString());
-//        System.out.println(res.body());
-        // TODO decode res to return verification id
-        return res.body();
+        //
+        // String ex ="{\n" +
+        // " \"responseCode\": 200,\n" +
+        // " \"message\": \"SUCCESS\",\n" +
+        // " \"data\": {\n" +
+        // " \"verificationId\": 66512,\n" +
+        // " \"mobileNumber\": null,\n" +
+        // " \"verificationStatus\": \"VERIFICATION_COMPLETED\",\n" +
+        // " \"responseCode\": \"200\",\n" +
+        // " \"errorMessage\": null,\n" +
+        // " \"transactionId\": \"5dfe41af-d59f-4253-9bcb-166daccb2382\",\n" +
+        // " \"authToken\": null\n" +
+        // " }\n" +
+        // "}";
+
+        ObjectMapper mapper = new ObjectMapper();
+        Response re = mapper.readValue(res.body(), Response.class);
+
+        if (re.getResponseCode() != 200)
+            throw new Exception(re.getMessage());
+
+        if (re.getData().getResponseCode() != 200)
+            throw new Exception(re.getMessage());
+
+        if (re.getData().getMobileNumber() != 0)
+            return re.getData().getMobileNumber();
+
+        OtpLogin otp = otpLoginRepository.findByVerificationId(re.getData().getVerificationId());
+
+        if (otp == null)
+            throw new Exception(
+                    "Internal Server Error: Possible cause is the verificationID return from MessageCentral was not found in DB");
+
+        return otp.getPhone();
+
     }
 
     @Override
-    public boolean customerExist(long id) {
-        return customerRepository.existsById(id);
+    public boolean customerExist(long phone) {
+        return customerRepository.existsByPhone(phone);
     }
 
     @Override
@@ -128,7 +178,7 @@ public class CustomerServiceImpl implements CustomerService {
         CustomerWishlist customerWishlist = customerWishlistRepository.getByCustomerPhone(customerPhone);
         List<Product> products = customerWishlist.getProducts();
         products.add(productRepository.getProductByCode(productCode));
-        return  customerWishlistRepository.save(customerWishlist);
+        return customerWishlistRepository.save(customerWishlist);
     }
 
     @Override
@@ -136,7 +186,7 @@ public class CustomerServiceImpl implements CustomerService {
         CustomerWishlist customerWishlist = customerWishlistRepository.getByCustomerPhone(customerPhone);
         List<Product> products = customerWishlist.getProducts();
         products.remove(productRepository.getProductByCode(productCode));
-        return  customerWishlistRepository.save(customerWishlist);
+        return customerWishlistRepository.save(customerWishlist);
     }
 
     @Override

@@ -7,13 +7,13 @@ import java.util.List;
 
 public interface CustomerService {
 
-    String sendOTP(long phone) throws IOException, InterruptedException;
+    String sendOTP(String phone) throws IOException, InterruptedException;
 
-    String verifyOTP(String id, String otp) throws IOException, InterruptedException;
+    long verifyOTP(String id, String otp) throws Exception;
 
     Customer getCustomer(long id);
 
-    boolean customerExist(long id);
+    boolean customerExist(long phone);
 
     Customer saveCustomer(Customer customer);
 

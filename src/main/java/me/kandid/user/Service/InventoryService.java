@@ -4,11 +4,13 @@ import me.kandid.user.Model.Product.ProductVariant;
 
 import java.util.List;
 
-public interface ProductVariantsService {
+public interface InventoryService {
 
     ProductVariant createProductVariantOfProductCodeAndSize(String productCode, String size);
 
     List<ProductVariant> getAllVariantsByProductCode(String productCode);
+
+    List<ProductVariant> getAllVariantsByProductCodeWithInventory(String productCode);
 
     void deleteAllVariantsByProductCode(String productCode);
 

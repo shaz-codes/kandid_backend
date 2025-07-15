@@ -1,8 +1,5 @@
 package me.kandid.user.Configurations;
 
-import com.auth0.jwt.JWT;
-import com.auth0.jwt.algorithms.Algorithm;
-import com.auth0.jwt.interfaces.DecodedJWT;
 import me.kandid.user.Filter.JWTFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -28,12 +25,10 @@ public class Configurations {
 
     @Bean
     SecurityFilterChain configure(HttpSecurity http) throws Exception {
-        http.headers(headers ->
-                headers.xssProtection(
-                        xss -> xss.headerValue(XXssProtectionHeaderWriter.HeaderValue.ENABLED_MODE_BLOCK)
-                ).contentSecurityPolicy(
-                        cps -> cps.policyDirectives("script-src 'self'")
-                ));
+        http.headers(headers -> headers.xssProtection(
+                xss -> xss.headerValue(XXssProtectionHeaderWriter.HeaderValue.ENABLED_MODE_BLOCK))
+                .contentSecurityPolicy(
+                        cps -> cps.policyDirectives("script-src 'self'")));
         http.httpBasic(Customizer.withDefaults());
         http.csrf(AbstractHttpConfigurer::disable);
         http.cors(AbstractHttpConfigurer::disable);
@@ -41,7 +36,5 @@ public class Configurations {
         http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
-
-
 
 }
