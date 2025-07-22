@@ -1,8 +1,5 @@
 package me.kandid.user.Controller.Customer;
 
-import com.auth0.jwt.JWT;
-import com.auth0.jwt.algorithms.Algorithm;
-import com.auth0.jwt.interfaces.DecodedJWT;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -12,6 +9,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import me.kandid.user.Model.Customer.CartItems;
 import me.kandid.user.Service.CustomerService;
+import me.kandid.user.Utils.Utils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -29,15 +27,6 @@ import java.util.List;
 public class CustomerCartController {
     @Autowired
     private CustomerService customerService;
-
-    long decodePhoneFromJWT(String token) {
-        DecodedJWT jwt = JWT
-                .require(Algorithm.HMAC256(System.getenv("ENCRYPT_KEY_KANDID")))
-                .withIssuer("Kandid User")
-                .build().verify(token);
-
-        return Long.parseLong(jwt.getSubject());
-    }
 
     @GetMapping()
     @Operation(
@@ -65,7 +54,7 @@ public class CustomerCartController {
             }
     )
     public ResponseEntity<List<CartItems>> getCart(@RequestHeader(name = "Authorization") String token) {
-        long phone = decodePhoneFromJWT(token);
+        long phone = Utils.decodePhoneFromJWT(token);
         List<CartItems> cart = customerService.getCustomerCart(phone);
         if (cart.isEmpty()) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
@@ -92,7 +81,7 @@ public class CustomerCartController {
     )
     public ResponseEntity<List<CartItems>> addToCart(@RequestHeader(name = "Authorization") String token,
                                                      @RequestBody CartItems cartItems) {
-        long phone = decodePhoneFromJWT(token);
+        long phone = Utils.decodePhoneFromJWT(token);
         return new ResponseEntity<>(customerService.addToCustomerCart(phone, cartItems), HttpStatus.OK);
     }
 
@@ -115,7 +104,7 @@ public class CustomerCartController {
     )
     public ResponseEntity<List<CartItems>> editCart(@RequestHeader(name = "Authorization") String token,
                                                     @RequestBody CartItems cartItems) {
-        long phone = decodePhoneFromJWT(token);
+        long phone = Utils.decodePhoneFromJWT(token);
         return new ResponseEntity<>(customerService.editCustomerCart(phone, cartItems), HttpStatus.OK);
     }
 
@@ -138,7 +127,7 @@ public class CustomerCartController {
     )
     public ResponseEntity<List<CartItems>> removeFromCart(@RequestHeader(name = "Authorization") String token,
                                                           @RequestBody CartItems cartItems) {
-        long phone = decodePhoneFromJWT(token);
+        long phone = Utils.decodePhoneFromJWT(token);
         return new ResponseEntity<>(customerService.removeFromCustomerCart(phone, cartItems), HttpStatus.OK);
     }
 }
