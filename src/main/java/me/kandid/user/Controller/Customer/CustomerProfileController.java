@@ -119,7 +119,7 @@ public class CustomerProfileController {
     )
     public ResponseEntity<Customer> updateProfile(@RequestHeader(name = "Authorization") String token,
                                                   @RequestBody Customer customer) {
-        customer.setPhone(decodePhoneFromJWT(token));
+        customer.setPhone(Utils.decodePhoneFromJWT(token));
         return new ResponseEntity<>(customerService.updateCustomer(customer), HttpStatus.OK);
     }
 
