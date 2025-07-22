@@ -197,12 +197,21 @@ public class CustomerServiceImpl implements CustomerService {
     @Override
     public List<CartItems> addToCustomerCart(long customerPhone, CartItems cartItem) {
         cartItem.setCustomerPhone(customerPhone);
+        customerCartRepository.save(cartItem);
         return customerCartRepository.findAllByCustomerPhone(customerPhone);
     }
 
     @Override
-    public void removeFromCustomerCart(long customerPhone, CartItems cartItem) {
+    public List<CartItems> editCustomerCart(long customerPhone, CartItems cartItem) {
+        cartItem.setCustomerPhone(customerPhone);
+        customerCartRepository.save(cartItem);
+        return customerCartRepository.findAllByCustomerPhone(customerPhone);
+    }
+
+    @Override
+    public List<CartItems> removeFromCustomerCart(long customerPhone, CartItems cartItem) {
         cartItem.setCustomerPhone(customerPhone);
         customerCartRepository.delete(cartItem);
+        return customerCartRepository.findAllByCustomerPhone(customerPhone);
     }
 }

@@ -2,7 +2,6 @@ package me.kandid.user.Controller.Customer;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
-import com.auth0.jwt.interfaces.DecodedJWT;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -30,15 +29,6 @@ import java.time.Instant;
 public class CustomerAuthController {
     @Autowired
     private CustomerService customerService;
-
-    long decodePhoneFromJWT(String token) {
-        DecodedJWT jwt = JWT
-                .require(Algorithm.HMAC256(System.getenv("ENCRYPT_KEY_KANDID")))
-                .withIssuer("Kandid User")
-                .build().verify(token);
-
-        return Long.parseLong(jwt.getSubject());
-    }
 
     @GetMapping("send")
     @Operation(

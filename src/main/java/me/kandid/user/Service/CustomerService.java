@@ -49,5 +49,7 @@ public interface CustomerService {
 
     List<CartItems> addToCustomerCart(long customerPhone, CartItems cartItem);
 
-    void removeFromCustomerCart(long customerPhone, CartItems cartItem);
+    List<CartItems> editCustomerCart(long customerPhone, CartItems cartItem);
+
+    List<CartItems> removeFromCustomerCart(long customerPhone, CartItems cartItem);
 }
