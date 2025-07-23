@@ -48,14 +48,14 @@ public class Product {
     @Schema(description = "Brand information for this product")
     private Brand brand;
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @OneToMany(fetch = FetchType.EAGER)
     @JoinColumn(name = "visuals_id")
     @Schema(description = "Visual assets (images, videos) for the product")
-    private Visuals visuals;
+    private List<Visuals> visuals;
 
-//    @Transient
+    //    @Transient
 //    @Schema(description = "Current selling price in paise (calculated dynamically with discounts)", example = "2999")
-   private double sellingPrice;
+    private double sellingPrice;
 
     @OneToMany(fetch = FetchType.EAGER)
     private Set<Discount> discounts;
