@@ -1,7 +1,10 @@
 package me.kandid.user.Service;
 
+import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Predicate;
 import me.kandid.user.Exceptions.ProductFilterNotFound;
+import me.kandid.user.Model.Product.Brand;
 import me.kandid.user.Model.Product.Discount;
 import me.kandid.user.Model.Product.Product;
 import me.kandid.user.Model.Product.ProductFilter;
@@ -88,13 +91,35 @@ public class ProductServiceImpl implements ProductService {
         if (filter.getTrend() != null) {
             spec = spec.and(buildOrLike("trend", filter.getTrend()));
         }
+        if (filter.getCategory() != null) {
+            spec = spec.and(buildOrLike("category", filter.getCategory()));
+        }
+        if (filter.getSubCategory() != null) {
+            spec = spec.and(buildOrLike("subCategory", filter.getSubCategory()));
+        }
+        if (filter.getBrand() != null) {
+            spec = spec.and((r, q, cb) -> {
+                Join<Product, Brand> join = r.join("brand", JoinType.LEFT);
+                Predicate[] predicates = Arrays.stream(filter.getBrand())
+                                               .map(v -> cb.like(cb.lower(join.get("displayName")),
+                                                       "%" + v.toLowerCase() + "%"))
+                                               .toArray(Predicate[]::new);
+                return cb.or(predicates);
+            });
+        }
 
-        List<Product> products = productRepository.findAll(spec);
+        List<Product> products = setSellingPriceAfterCalculation(productRepository.findAll(spec));
 
-        return setSellingPriceAfterCalculation(products).stream()
-                .filter(item -> item.getSellingPrice() >= filter.getPriceFrom()
-                        && item.getSellingPrice() <= filter.getPriceTo())
-                .toList();
+// TODO: Implement combined price filter using Join
+        if (filter.getPriceTo() != null) {
+            products = products.stream().filter(item -> item.getSellingPrice() <= filter.getPriceTo()).toList();
+        }
+
+        if (filter.getPriceFrom() != null) {
+            products = products.stream().filter(item -> item.getSellingPrice() >= filter.getPriceFrom()).toList();
+        }
+
+        return products;
     }
 
     @NotNull
@@ -106,6 +131,8 @@ public class ProductServiceImpl implements ProductService {
                     .findDiscountByDiscountedFromAfterAndDiscountedToBeforeAndProductCode(now, now, code);
             if (discount != null) {
                 item.setSellingPrice(discount.getDiscountedPrice());
+            } else {
+                item.setSellingPrice(item.getMrp());
             }
         });
         return products;
@@ -114,8 +141,8 @@ public class ProductServiceImpl implements ProductService {
     private Specification<Product> buildOrLike(String field, String[] list) {
         return (root, query, cb) -> {
             Predicate[] predicates = Arrays.stream(list)
-                    .map(v -> cb.like(cb.lower(root.get(field)), "%" + v.toLowerCase() + "%"))
-                    .toArray(Predicate[]::new);
+                                           .map(v -> cb.like(cb.lower(root.get(field)), "%" + v.toLowerCase() + "%"))
+                                           .toArray(Predicate[]::new);
             return cb.or(predicates);
 
         };

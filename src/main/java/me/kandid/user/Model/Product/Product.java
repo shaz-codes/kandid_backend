@@ -5,7 +5,6 @@ import jakarta.persistence.*;
 import lombok.Data;
 
 import java.util.List;
-import java.util.Set;
 
 @Data
 @Entity
@@ -49,7 +48,7 @@ public class Product {
     private Brand brand;
 
     @OneToMany(fetch = FetchType.EAGER)
-    @JoinColumn(name = "visuals_id")
+    @JoinColumn(name = "product_code")
     @Schema(description = "Visual assets (images, videos) for the product")
     private List<Visuals> visuals;
 
@@ -58,7 +57,7 @@ public class Product {
     private double sellingPrice;
 
     @OneToMany(fetch = FetchType.EAGER)
-    private Set<Discount> discounts;
+    private List<Discount> discounts;
 
     @Schema(
             description = "Maximum Retail Price in paise",
