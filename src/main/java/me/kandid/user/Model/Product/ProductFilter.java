@@ -39,6 +39,18 @@ public class ProductFilter {
     private String[] fit;
 
     @Schema(
+            description = "Filter by Category",
+            example = "[\"Clothing\", \"Topwear\", \"futuristic\"]"
+    )
+    private String[] category;
+
+    @Schema(
+            description = "Filter by Sub Category",
+            example = "[\"sustainable\", \"retro\", \"futuristic\"]"
+    )
+    private String[] subCategory;
+
+    @Schema(
             description = "Filter by specific fit type classifications",
             example = "[\"classic\", \"modern\"]"
     )
@@ -91,6 +103,12 @@ public class ProductFilter {
             example = "[\"sustainable\", \"retro\", \"futuristic\"]"
     )
     private String[] trend;
+
+    @Schema(
+            description = "Filter by Brands",
+            example = "[\"NIKE\", \"XYZ\", \"PUMA\"]"
+    )
+    private String[] brand;
 
     @Schema(
             description = "Minimum price filter",
