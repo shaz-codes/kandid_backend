@@ -104,7 +104,8 @@ public class CustomerAuthController {
                         .withIssuer("Kandid User")
                         .withSubject(String.valueOf(phone))
                         .withExpiresAt(Instant.now().plusSeconds(2678400))
-                        .sign(Algorithm.HMAC256(System.getenv("ENCRYPT_KEY_KANDID")));
+//                        .sign(Algorithm.HMAC256(System.getenv("ENCRYPT_KEY_KANDID")));
+                        .sign(Algorithm.HMAC256("i0vriteFm08yJZxXrmuWiY7hsDDZhIcW"));
 
         return new ResponseEntity<>(new OtpVerifyResponse(jwt, null, customerService.customerExist(phone)),
                 HttpStatus.OK);
