@@ -40,10 +40,12 @@ public class CustomerServiceImpl implements CustomerService {
     @Autowired
     private OtpLoginRepository otpLoginRepository;
 
+
     @Override
     public Customer getCustomer(long phone) {
         return customerRepository.getCustomerByPhone(phone);
     }
+
 
     @Override
     public String sendOTP(String phone) throws IOException, InterruptedException {

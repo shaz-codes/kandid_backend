@@ -26,9 +26,9 @@ public class Configurations {
     @Bean
     SecurityFilterChain configure(HttpSecurity http) throws Exception {
         http.headers(headers -> headers.xssProtection(
-                xss -> xss.headerValue(XXssProtectionHeaderWriter.HeaderValue.ENABLED_MODE_BLOCK))
-                .contentSecurityPolicy(
-                        cps -> cps.policyDirectives("script-src 'self'")));
+                                               xss -> xss.headerValue(XXssProtectionHeaderWriter.HeaderValue.ENABLED_MODE_BLOCK))
+                                       .contentSecurityPolicy(
+                                               cps -> cps.policyDirectives("script-src 'self'")));
         http.httpBasic(Customizer.withDefaults());
         http.csrf(AbstractHttpConfigurer::disable);
         http.cors(AbstractHttpConfigurer::disable);
@@ -36,5 +36,4 @@ public class Configurations {
         http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
-
 }
