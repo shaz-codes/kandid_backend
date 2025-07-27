@@ -1,22 +1,29 @@
 package me.kandid.user.Controller;
 
+import co.elastic.clients.elasticsearch._types.aggregations.MultiBucketBase;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import me.kandid.user.Model.Product.ElastiProduct;
 import me.kandid.user.Model.Product.Product;
 import me.kandid.user.Model.Product.ProductFilter;
 import me.kandid.user.Service.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.elasticsearch.client.elc.ElasticsearchAggregations;
+import org.springframework.data.elasticsearch.core.SearchHit;
+import org.springframework.data.elasticsearch.core.SearchHits;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @CrossOrigin
@@ -28,37 +35,6 @@ import java.util.List;
 public class ProductController {
     @Autowired
     private ProductService productService;
-
-    @GetMapping(value = "all")
-    @Operation(
-            summary = "Get All Products",
-            description = "Retrieve a complete list of all available products in the system. This endpoint returns all " +
-                    "active products with their details including pricing, brand information, and product variants."
-    )
-    @ApiResponses(
-            value = {
-                    @ApiResponse(
-                            responseCode = "200",
-                            description = "Successfully retrieved all products",
-                            content = @Content(
-                                    mediaType = "application/json",
-                                    array = @ArraySchema(schema = @Schema(implementation = Product.class))
-                            )
-                    ),
-                    @ApiResponse(
-                            responseCode = "404",
-                            description = "No Products Found",
-                            content = @Content
-                    ),
-            }
-    )
-    public ResponseEntity<List<Product>> getAllProducts() {
-        List<Product> list = productService.getProducts();
-        if (list.isEmpty()) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
-        return ResponseEntity.ok(list);
-    }
 
     @GetMapping("{code}")
     @Operation(
@@ -95,41 +71,42 @@ public class ProductController {
         return ResponseEntity.ok(product);
     }
 
-    @PostMapping("filtered")
-    @Operation(
-            summary = "Filter Products",
-            description = "Retrieve products based on various filter criteria such as material, color, occasion, price range, and other product attributes. This endpoint supports multiple filter options to help users find products matching their preferences."
-    )
-    @ApiResponses(
-            value = {
-                    @ApiResponse(
-                            responseCode = "200",
-                            description = "Products matching the filter criteria found",
-                            content = @Content(
-                                    mediaType = "application/json",
-                                    array = @ArraySchema(schema = @Schema(implementation = Product.class))
-                            )
-                    ),
-                    @ApiResponse(
-                            responseCode = "404",
-                            description = "No products found matching the specified filter criteria",
-                            content = @Content
-                    ),
-            }
-    )
-    public ResponseEntity<?> filterProduct(
-            @io.swagger.v3.oas.annotations.parameters.RequestBody(
-                    description = "Filter criteria for product search",
-                    required = true,
-                    content = @Content(
-                            mediaType = "application/json",
-                            schema = @Schema(implementation = ProductFilter.class)
-                    )
-            ) @RequestBody ProductFilter filter) {
-        List<Product> list = productService.getProductsByFilter(filter);
-        if (list.isEmpty()) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
-        return ResponseEntity.ok(list);
+
+    @PostMapping("/")
+    public ResponseEntity<?> getProducts(@RequestParam(
+                                                 value = "search",
+                                                 required = false
+                                         ) String q,
+                                         @RequestParam(
+                                                 value = "pg"
+                                         )
+                                         int pg,
+                                         @RequestParam(
+                                                 value = "pgsize"
+                                         )
+                                         int pgsize,
+                                         @RequestBody(required = false) ProductFilter filter) {
+        Map<String, Object> map = new HashMap<>();
+        SearchHits<ElastiProduct> prod = productService.getProducts(q, filter, PageRequest.of(pg, pgsize));
+        ElasticsearchAggregations aggregatedData = ((ElasticsearchAggregations) prod.getAggregations());
+        Map<String, Object> poop = new HashMap<>();
+        assert aggregatedData != null;
+        aggregatedData.aggregationsAsMap().forEach((s, a) -> {
+            Map<String, Long> o =
+                    a.aggregation().getAggregate().sterms().buckets().array().stream()
+                     .collect(Collectors.toMap(bucket -> bucket.key()
+                                                               .stringValue(), MultiBucketBase::docCount));
+            poop.put(s, o);
+        });
+        map.put("product", prod.stream().map(SearchHit::getContent).collect(Collectors.toList()));
+        map.put("filters", poop);
+        return new ResponseEntity<>(map, HttpStatus.OK);
+    }
+
+    @GetMapping("autocomplete")
+    public ResponseEntity<?> autoComplete(@RequestParam("q") String q) {
+        return new ResponseEntity<>(
+                productService.autocomplete(q).stream().map(SearchHit::getContent).collect(Collectors.toList()),
+                HttpStatus.OK);
     }
 }

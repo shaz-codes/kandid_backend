@@ -4,6 +4,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.List;
+
 @Getter
 @Setter
 @Schema(description = "Filter criteria for searching products based on various attributes")
@@ -12,103 +14,103 @@ public class ProductFilter {
             description = "Filter by material types",
             example = "[\"cotton\", \"silk\", \"polyester\"]"
     )
-    private String[] material;
+    private List<String> material;
 
     @Schema(
             description = "Filter by colors",
             example = "[\"red\", \"blue\", \"black\"]"
     )
-    private String[] color;
+    private List<String> color;
 
     @Schema(
             description = "Filter by suitable occasions",
             example = "[\"casual\", \"formal\", \"party\"]"
     )
-    private String[] occasion;
+    private List<String> occasion;
 
     @Schema(
             description = "Filter by sleeve types",
             example = "[\"full\", \"half\", \"sleeveless\"]"
     )
-    private String[] sleeve;
+    private List<String> sleeve;
 
     @Schema(
             description = "Filter by fit types",
             example = "[\"regular\", \"slim\", \"loose\"]"
     )
-    private String[] fit;
+    private List<String> fit;
 
     @Schema(
             description = "Filter by Category",
             example = "[\"Clothing\", \"Topwear\", \"futuristic\"]"
     )
-    private String[] category;
+    private List<String> category;
 
     @Schema(
             description = "Filter by Sub Category",
             example = "[\"sustainable\", \"retro\", \"futuristic\"]"
     )
-    private String[] subCategory;
+    private List<String> subCategory;
 
     @Schema(
             description = "Filter by specific fit type classifications",
             example = "[\"classic\", \"modern\"]"
     )
-    private String[] fitType;
+    private List<String> fitType;
 
     @Schema(
             description = "Filter by pattern designs",
             example = "[\"solid\", \"striped\", \"printed\"]"
     )
-    private String[] pattern;
+    private List<String> pattern;
 
     @Schema(
             description = "Filter by neckline styles",
             example = "[\"round\", \"v-neck\", \"collar\"]"
     )
-    private String[] neckline;
+    private List<String> neckline;
 
     @Schema(
             description = "Filter by closure mechanisms",
             example = "[\"button\", \"zip\", \"tie\"]"
     )
-    private String[] closure;
+    private List<String> closure;
 
     @Schema(
             description = "Filter by closure types",
             example = "[\"front\", \"back\", \"side\"]"
     )
-    private String[] closureType;
+    private List<String> closureType;
 
     @Schema(
             description = "Filter by rise styles for bottoms",
             example = "[\"low\", \"mid\", \"high\"]"
     )
-    private String[] riseStyle;
+    private List<String> riseStyle;
 
     @Schema(
             description = "Filter by fashion style categories",
             example = "[\"contemporary\", \"traditional\", \"vintage\"]"
     )
-    private String[] style;
+    private List<String> style;
 
     @Schema(
             description = "Filter by aesthetic appeal categories",
             example = "[\"minimalist\", \"bold\", \"elegant\"]"
     )
-    private String[] aesthetic;
+    private List<String> aesthetic;
 
     @Schema(
             description = "Filter by current fashion trends",
             example = "[\"sustainable\", \"retro\", \"futuristic\"]"
     )
-    private String[] trend;
+    private List<String> trend;
 
     @Schema(
             description = "Filter by Brands",
             example = "[\"NIKE\", \"XYZ\", \"PUMA\"]"
     )
-    private String[] brand;
+    private List<String> brand;
 
     @Schema(
             description = "Minimum price filter",
