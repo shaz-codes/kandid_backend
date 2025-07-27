@@ -1,15 +1,51 @@
 package me.kandid.user.Model.Product;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.persistence.*;
 import lombok.Data;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.elasticsearch.annotations.*;
 
+import java.time.Instant;
 import java.util.List;
 
 @Data
-@Entity
-@Schema(description = "Product entity representing a fashion item with all its attributes and specifications")
-public class Product {
+@Document(indexName = "product")
+public class ElastiProduct {
+
+    public static ElastiProduct fromProduct(Product product) {
+        ElastiProduct np = new ElastiProduct();
+        np.sellingPrice = product.getSellingPrice();
+        product.getDiscounts().forEach(d -> {
+            Instant now = Instant.now();
+            if (d.getDiscountedFrom().isBefore(now) && d.getDiscountedTo().isAfter(now)) {
+                np.sellingPrice = d.getDiscountedPrice();
+            }
+        });
+        np.code = product.getCode();
+        np.name = product.getName();
+//        np.autocomplete.
+        np.description = product.getDescription();
+        np.aesthetic = product.getAesthetic();
+        np.category = product.getCategory();
+        np.brand = product.getBrand().getDisplayName();
+        np.material = product.getMaterial();
+        np.color = product.getColor();
+        np.closure = product.getClosure();
+        np.closureType = product.getClosureType();
+        np.fit = product.getFit();
+        np.fitType = product.getFitType();
+        np.mrp = product.getMrp();
+        np.neckline = product.getNeckline();
+        np.pattern = product.getPattern();
+        np.riseStyle = product.getRiseStyle();
+        np.style = product.getStyle();
+        np.trend = product.getTrend();
+        np.occasion = product.getOccasion();
+        np.sleeve = product.getSleeve();
+        np.subCategory = product.getSubCategory();
+        return np;
+    }
+
     @Id
     @Schema(
             description = "Unique product code identifier",
@@ -18,11 +54,33 @@ public class Product {
     )
     private String code;
 
+//    private String name;
+
     @Schema(
             description = "Product name/title",
             example = "Cotton Casual Shirt"
     )
+    @MultiField(
+            mainField = @Field(
+                    analyzer = "autocomplete",
+                    searchAnalyzer = "standard"
+            ),
+            otherFields = {
+                    @InnerField(
+                            suffix = "keyword",
+                            type = FieldType.Keyword
+                    ),
+                    @InnerField(
+                            suffix = "fuzzy",
+                            type = FieldType.Text,
+                            analyzer = "standard"
+                    )
+            }
+    )
     private String name;
+
+    @Field(ignoreAbove = 1)
+    private List<Visuals> visuals;
 
     @Schema(
             description = "Detailed description of the product",
@@ -31,36 +89,20 @@ public class Product {
     private String description;
 
     @Schema(
-            description = "Whether the product is active in the system",
-            example = "true"
-    )
-    private Boolean active;
-
-    @Schema(
             description = "Whether the product is available for purchase (derived from inventory)",
             example = "true"
     )
     private Boolean available;
 
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "brand_id")
+
     @Schema(description = "Brand information for this product")
-    private Brand brand;
+    private String brand;
 
-    @OneToMany(fetch = FetchType.EAGER)
-    @JoinColumn(name = "product_code")
-    @Schema(description = "Visual assets (images, videos) for the product")
-    private List<Visuals> visuals;
-
-    //    @Transient
     @Schema(
             description = "Current selling price in paise (calculated dynamically with discounts)",
             example = "2999"
     )
     private double sellingPrice;
-
-    @OneToMany(fetch = FetchType.EAGER)
-    private List<Discount> discounts;
 
     @Schema(
             description = "Maximum Retail Price in paise",
@@ -79,10 +121,6 @@ public class Product {
             example = "Shirts"
     )
     private String subCategory;
-
-    @OneToMany(fetch = FetchType.EAGER)
-    @Schema(description = "Available inventory variants (sizes and stock)")
-    private List<ProductVariant> inventory;
 
     // Product specification details
     @Schema(

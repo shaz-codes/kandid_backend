@@ -1,15 +1,16 @@
 package me.kandid.user.Service;
 
-import me.kandid.user.Exceptions.ProductFilterNotFound;
+import me.kandid.user.Model.Product.ElastiProduct;
 import me.kandid.user.Model.Product.Product;
 import me.kandid.user.Model.Product.ProductFilter;
-
-import java.util.List;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.elasticsearch.core.SearchHits;
 
 public interface ProductService {
-    List<Product> getProducts();
 
     Product getProduct(String code);
 
-    List<Product> getProductsByFilter(ProductFilter filter) throws ProductFilterNotFound;
+    SearchHits<ElastiProduct> getProducts(String s, ProductFilter filter, Pageable pageable);
+
+    SearchHits<ElastiProduct> autocomplete(String q);
 }
