@@ -1,6 +1,5 @@
 package me.kandid.user.Service;
 
-import me.kandid.user.Configurations.SampleClient;
 import me.kandid.user.Model.Product.Product;
 import me.kandid.user.Model.Product.ProductFilter;
 import me.kandid.user.Model.Product.SearchableProduct;
@@ -28,6 +27,8 @@ public class ProductServiceImpl implements ProductService {
     @Autowired
     private ProductRepository productRepository;
 
+    @Autowired
+    private OpenSearchClient openSearchClient;
 
     @Override
     public Product getProduct(String code) {
@@ -51,7 +52,6 @@ public class ProductServiceImpl implements ProductService {
 
         String indexName = "products";
         try {
-            OpenSearchClient openSearchClient = SampleClient.create();
             SearchRequest searchRequest =
                     new SearchRequest.Builder().index(indexName)
                                                .query(
@@ -94,7 +94,6 @@ public class ProductServiceImpl implements ProductService {
     public SearchResponse<SearchableProduct> autocomplete(String a) {
         String indexName = "products";
         try {
-            OpenSearchClient openSearchClient = SampleClient.create();
             SearchRequest searchRequest =
                     new SearchRequest.Builder().index(indexName)
                                                .query(
