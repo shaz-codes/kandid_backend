@@ -3,17 +3,16 @@ package me.kandid.user.Model.Product;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.elasticsearch.annotations.*;
 
 import java.time.Instant;
 import java.util.List;
 
-@Data
-@Document(indexName = "product")
-public class ElastiProduct {
 
-    public static ElastiProduct fromProduct(Product product) {
-        ElastiProduct np = new ElastiProduct();
+@Data
+public class SearchableProduct {
+
+    public static SearchableProduct fromProduct(Product product) {
+        SearchableProduct np = new SearchableProduct();
         np.sellingPrice = product.getSellingPrice();
         product.getDiscounts().forEach(d -> {
             Instant now = Instant.now();
@@ -23,7 +22,6 @@ public class ElastiProduct {
         });
         np.code = product.getCode();
         np.name = product.getName();
-//        np.autocomplete.
         np.description = product.getDescription();
         np.aesthetic = product.getAesthetic();
         np.category = product.getCategory();
@@ -60,26 +58,8 @@ public class ElastiProduct {
             description = "Product name/title",
             example = "Cotton Casual Shirt"
     )
-    @MultiField(
-            mainField = @Field(
-                    analyzer = "autocomplete",
-                    searchAnalyzer = "standard"
-            ),
-            otherFields = {
-                    @InnerField(
-                            suffix = "keyword",
-                            type = FieldType.Keyword
-                    ),
-                    @InnerField(
-                            suffix = "fuzzy",
-                            type = FieldType.Text,
-                            analyzer = "standard"
-                    )
-            }
-    )
     private String name;
 
-    @Field(ignoreAbove = 1)
     private List<Visuals> visuals;
 
     @Schema(

@@ -1,34 +1,33 @@
 package me.kandid.user.Service;
 
-import co.elastic.clients.elasticsearch._types.FieldValue;
-import co.elastic.clients.elasticsearch._types.aggregations.Aggregation;
-import co.elastic.clients.elasticsearch._types.aggregations.TermsAggregation;
-import co.elastic.clients.elasticsearch._types.query_dsl.Query;
-import me.kandid.user.Model.Product.ElastiProduct;
+import me.kandid.user.Configurations.SampleClient;
 import me.kandid.user.Model.Product.Product;
 import me.kandid.user.Model.Product.ProductFilter;
+import me.kandid.user.Model.Product.SearchableProduct;
 import me.kandid.user.Repository.ProductRepository;
-import org.jetbrains.annotations.NotNull;
+import org.opensearch.client.opensearch.OpenSearchClient;
+import org.opensearch.client.opensearch._types.FieldValue;
+import org.opensearch.client.opensearch._types.aggregations.Aggregation;
+import org.opensearch.client.opensearch._types.aggregations.TermsAggregation;
+import org.opensearch.client.opensearch._types.query_dsl.Query;
+import org.opensearch.client.opensearch.core.SearchRequest;
+import org.opensearch.client.opensearch.core.SearchResponse;
+import org.opensearch.client.opensearch.core.search.Hit;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.elasticsearch.client.elc.NativeQuery;
-import org.springframework.data.elasticsearch.client.elc.NativeQueryBuilder;
-import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
-import org.springframework.data.elasticsearch.core.SearchHits;
 import org.springframework.stereotype.Service;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class ProductServiceImpl implements ProductService {
     @Autowired
     private ProductRepository productRepository;
 
-    @Autowired
-    private ElasticsearchOperations elasticsearchOperations;
 
     @Override
     public Product getProduct(String code) {
@@ -36,9 +35,9 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public SearchHits<ElastiProduct> getProducts(String s, ProductFilter filter, Pageable pageable) {
+    public SearchResponse<SearchableProduct> getProducts(String s, ProductFilter filter, Pageable pageable) {
         List<String> fields = new ArrayList<>();
-        Field[] f = ElastiProduct.class.getDeclaredFields();
+        Field[] f = SearchableProduct.class.getDeclaredFields();
         for (Field field : f) {
             if (Modifier.isPrivate(field.getModifiers())) {
                 fields.add(field.getName());
@@ -49,33 +48,78 @@ public class ProductServiceImpl implements ProductService {
         fields.remove("available");
         fields.remove("sellingPrice");
         fields.remove("mrp");
-        fields.remove("name");
-        NativeQueryBuilder queryBuilder =
-                NativeQuery.builder().withQuery(q -> q.bool(b -> {
-                            if (s == null || s.isBlank())
-                                b.must(m -> m.matchAll(ma -> ma));
-                            else {
-                                b.should(m -> m.multiMatch(mm -> mm.fields(fields).fuzziness("AUTO").query(s)));
-                                b.should(m -> m.matchPhrasePrefix(mm -> mm.field("name").query(s)));
-                                b.should(m -> m.matchPhrasePrefix(mm -> mm.field("description").query(s)));
-                            }
-                            if (filter != null) b.filter(createFilter(filter));
-                            return b;
-                        }
-                ));
-        for (String field : fields) {
-            if (field.equals("code") || field.equals("visuals") || field.equals("description") || field.equals("name"))
-                continue;
-            Aggregation agg = Aggregation.of(
-                    a -> a.terms(TermsAggregation.of(t -> t.field(field + ".keyword"))));
-            queryBuilder.withAggregation(field, agg).withPageable(pageable);
-        }
-        org.springframework.data.elasticsearch.core.query.Query query = queryBuilder.build();
 
-        return elasticsearchOperations.search(query, ElastiProduct.class);
+        String indexName = "products";
+        try {
+            OpenSearchClient openSearchClient = SampleClient.create();
+            SearchRequest searchRequest =
+                    new SearchRequest.Builder().index(indexName)
+                                               .query(
+                                                       q -> q.bool(
+                                                               b -> {
+                                                                   if (s != null && !s.trim().isEmpty()) {
+                                                                       b.must(m -> m.multiMatch(
+                                                                               mm -> mm.query(s).fuzziness("AUTO")));
+                                                                   }
+                                                                   if (filter != null) {
+                                                                       b.filter(createFilter(filter));
+                                                                   }
+                                                                   return b;
+                                                               }))
+                                               .size(pageable.getPageSize())
+                                               .from(pageable.getPageNumber())
+                                               .aggregations(
+                                                       fields.stream()
+                                                             .filter(v -> !v.equals("code") && !v.equals(
+                                                                     "visuals") && !v.equals(
+                                                                     "description") && !v.equals(
+                                                                     "name"))
+                                                             .collect(
+                                                                     Collectors.toMap((v) -> v,
+                                                                             (v) -> Aggregation.of(
+                                                                                     a -> a.terms(TermsAggregation.of(
+                                                                                             ta -> ta.field(
+                                                                                                     v.concat(
+                                                                                                             ".keyword"))))))))
+                                               .build();
+            SearchResponse<SearchableProduct> p = openSearchClient.search(searchRequest, SearchableProduct.class);
+            System.out.println(p.hits().hits().stream().map(Hit::score).toList());
+            return p;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
-    @NotNull
+    @Override
+    public SearchResponse<SearchableProduct> autocomplete(String a) {
+        String indexName = "products";
+        try {
+            OpenSearchClient openSearchClient = SampleClient.create();
+            SearchRequest searchRequest =
+                    new SearchRequest.Builder().index(indexName)
+                                               .query(
+                                                       q -> q.bool(b -> b.should(
+                                                                                 s -> s.match(v -> v.field("name.autocomplete")
+                                                                                                    .query(FieldValue.of(a))
+                                                                                 ))
+                                                                         .should(s -> s.match(v -> v.field("name")
+                                                                                                    .query(FieldValue.of(
+                                                                                                            a))
+                                                                                                    .fuzziness(
+                                                                                                            "AUTO")))
+                                                                         .should(s -> s.matchPhrasePrefix(
+                                                                                 v -> v.field("name").query(a)))))
+                                               .size(30)
+                                               .build();
+            SearchResponse<SearchableProduct> p = openSearchClient.search(searchRequest, SearchableProduct.class);
+            System.out.println(p.hits().hits().stream().map(Hit::score).toList());
+            return p;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+
     private List<Query> createFilter(ProductFilter filter) {
         List<Query> filters = new ArrayList<>();
 
@@ -130,23 +174,15 @@ public class ProductServiceImpl implements ProductService {
         if (filter.getBrand() != null) {
             filters.add(createFieldQ("brand", filter.getBrand()));
         }
-        System.out.println(filters);
         return filters;
     }
 
-    @Override
-    public SearchHits<ElastiProduct> autocomplete(String q) {
-        org.springframework.data.elasticsearch.core.query.Query query = new NativeQuery(Query.of(
-                p -> p.matchPhrasePrefix(m -> m.field(
-                        "name").query(q)))).setPageable(Pageable.ofSize(5));
-        return elasticsearchOperations.search(query, ElastiProduct.class);
-    }
 
     private Query createFieldQ(String field, List<String> list) {
         return Query.of(
                 q -> q
                         .terms(
-                                t -> t.field(field + ".keyword")
+                                t -> t.field(field)
                                       .terms(
                                               tt -> tt
                                                       .value(list.stream().map(FieldValue::of).toList()
