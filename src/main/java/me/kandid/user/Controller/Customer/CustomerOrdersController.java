@@ -42,7 +42,7 @@ public class CustomerOrdersController {
                             description = "Orders retrieved successfully",
                             content = @Content(
                                     mediaType = "application/json",
-                                    array = @ArraySchema(arraySchema = @Schema(implementation = CustomerOrder.class))
+                                    array = @ArraySchema(schema = @Schema(implementation = CustomerOrder.class))
                             )
                     ),
                     @ApiResponse(
