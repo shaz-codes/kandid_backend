@@ -91,6 +91,8 @@ public class ProductController {
         map.put("filters", prod.aggregations().entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey,
                 o -> o.getValue().sterms().buckets().array().stream().collect(Collectors.toMap(StringTermsBucket::key,
                         StringTermsBucket::docCount)))));
+        assert prod.hits().total() != null;
+        map.put("totalItems", prod.hits().total().value());
         return new ResponseEntity<>(map,
                 HttpStatus.OK);
     }
