@@ -11,6 +11,7 @@ import java.util.List;
 public interface ProductRepository extends JpaRepository<Product, String>, JpaSpecificationExecutor<Product> {
     Product getProductByCode(String code);
 
-    List<Product> findAllByActiveIsTrue();
+    List<Product> getProductsByCodeContaining(String code);
 
+    List<Product> getProductsByCodeContainingAndActive(String code, Boolean active);
 }
