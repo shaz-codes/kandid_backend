@@ -26,12 +26,18 @@ public class AWSOpenSearchClient {
     @Value("${os.hostname}")
     private String hostname;
 
+    @Value("${os.port}")
+    private int port;
+
+    @Value("${os.https}")
+    private boolean https;
+
     @Bean
     public OpenSearchClient openSearchClient() {
         String auth = Base64.getEncoder().encodeToString((user + ":" + pass).getBytes(StandardCharsets.UTF_8));
         String authHeader = "Basic " + auth;
 
-        final var hosts = new HttpHost[]{new HttpHost("https", hostname, 443)};
+        final var hosts = new HttpHost[]{new HttpHost(https ? "https" : "http", hostname, port)};
         final var transport = ApacheHttpClient5TransportBuilder
                 .builder(hosts)
                 .setMapper(new JacksonJsonpMapper())

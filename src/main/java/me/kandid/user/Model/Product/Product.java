@@ -98,6 +98,19 @@ public class Product {
     private String color;
 
     @Schema(
+            description = "Primary color",
+            example = "#ffffff"
+    )
+    private String colorCode;
+
+    @Schema(
+            description = "a map of colors along with it's product code used to navigate to a different color",
+            example = "{\"White\":\"PROD001-WHITE\",\"\"}"
+    )
+    @Transient
+    private List<Colors> colors;
+
+    @Schema(
             description = "Suitable occasions",
             example = "Casual"
     )
@@ -168,4 +181,17 @@ public class Product {
             example = "Sustainable Fashion"
     )
     private String trend;
+
+    @Data
+    public static class Colors {
+        String productCode;
+        String colorCode;
+        String color;
+
+        public Colors(String productCode, String colorCode, String color) {
+            this.productCode = productCode;
+            this.colorCode = colorCode;
+            this.color = color;
+        }
+    }
 }

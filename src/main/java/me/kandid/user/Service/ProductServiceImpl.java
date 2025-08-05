@@ -1,5 +1,6 @@
 package me.kandid.user.Service;
 
+import me.kandid.user.Exceptions.ProductNotFound;
 import me.kandid.user.Model.Product.Product;
 import me.kandid.user.Model.Product.ProductFilter;
 import me.kandid.user.Model.Product.SearchableProduct;
@@ -32,7 +33,16 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public Product getProduct(String code) {
-        return productRepository.getProductByCode(code);
+        System.out.println(code.split("-")[0]);
+        List<Product> products = productRepository.getProductsByCodeContainingAndActive(code.split("-")[0], true);
+        if (products.isEmpty()) {
+            throw new ProductNotFound(code);
+        }
+        Product product = products.stream().filter(p -> p.getCode().equals(code)).findFirst()
+                                  .orElse(products.getFirst());
+        product.setColors(
+                products.stream().map(p -> new Product.Colors(p.getCode(), p.getColor(), p.getColorCode())).toList());
+        return product;
     }
 
     @Override
@@ -64,6 +74,9 @@ public class ProductServiceImpl implements ProductService {
                                                                    if (filter != null) {
                                                                        b.filter(createFilter(filter));
                                                                    }
+                                                                   b.must(m -> m.match(mm -> mm.field("active")
+                                                                                               .query(FieldValue.of(
+                                                                                                       true))));
                                                                    return b;
                                                                }))
                                                .size(pageable.getPageSize())
@@ -73,7 +86,8 @@ public class ProductServiceImpl implements ProductService {
                                                              .filter(v -> !v.equals("code") && !v.equals(
                                                                      "visuals") && !v.equals(
                                                                      "description") && !v.equals(
-                                                                     "name"))
+                                                                     "name") && !v.equals("colorName") && !v.equals(
+                                                                     "active"))
                                                              .collect(
                                                                      Collectors.toMap((v) -> v,
                                                                              (v) -> Aggregation.of(

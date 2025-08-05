@@ -4,46 +4,11 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import org.springframework.data.annotation.Id;
 
-import java.time.Instant;
 import java.util.List;
 
 
 @Data
 public class SearchableProduct {
-
-    public static SearchableProduct fromProduct(Product product) {
-        SearchableProduct np = new SearchableProduct();
-        np.sellingPrice = product.getSellingPrice();
-        product.getDiscounts().forEach(d -> {
-            Instant now = Instant.now();
-            if (d.getDiscountedFrom().isBefore(now) && d.getDiscountedTo().isAfter(now)) {
-                np.sellingPrice = d.getDiscountedPrice();
-            }
-        });
-        np.code = product.getCode();
-        np.name = product.getName();
-        np.description = product.getDescription();
-        np.aesthetic = product.getAesthetic();
-        np.category = product.getCategory();
-        np.brand = product.getBrand().getDisplayName();
-        np.material = product.getMaterial();
-        np.color = product.getColor();
-        np.closure = product.getClosure();
-        np.closureType = product.getClosureType();
-        np.fit = product.getFit();
-        np.fitType = product.getFitType();
-        np.mrp = product.getMrp();
-        np.neckline = product.getNeckline();
-        np.pattern = product.getPattern();
-        np.riseStyle = product.getRiseStyle();
-        np.style = product.getStyle();
-        np.trend = product.getTrend();
-        np.occasion = product.getOccasion();
-        np.sleeve = product.getSleeve();
-        np.subCategory = product.getSubCategory();
-        return np;
-    }
-
     @Id
     @Schema(
             description = "Unique product code identifier",
@@ -52,7 +17,6 @@ public class SearchableProduct {
     )
     private String code;
 
-//    private String name;
 
     @Schema(
             description = "Product name/title",
@@ -110,10 +74,16 @@ public class SearchableProduct {
     private String material;
 
     @Schema(
+            description = "Color with Code",
+            example = "White#ffffff"
+    )
+    private String color;
+
+    @Schema(
             description = "Primary color",
             example = "Blue"
     )
-    private String color;
+    private String colorName;
 
     @Schema(
             description = "Suitable occasions",
@@ -186,4 +156,9 @@ public class SearchableProduct {
             example = "Sustainable Fashion"
     )
     private String trend;
+
+    @Schema(
+            description = "Whether Product is visible to the public or not"
+    )
+    private Boolean active;
 }
