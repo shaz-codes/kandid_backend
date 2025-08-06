@@ -3,7 +3,7 @@ package me.kandid.user.Service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import me.kandid.user.Model.Customer.*;
 import me.kandid.user.Model.MessageCentral.Response;
-import me.kandid.user.Model.Product.Product;
+import me.kandid.user.Model.Product.Types.Product;
 import me.kandid.user.Repository.Customer.*;
 import me.kandid.user.Repository.ProductRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -119,16 +119,6 @@ public class CustomerServiceImpl implements CustomerService {
     }
 
     @Override
-    public void deleteCustomer(Customer customer) {
-        customerRepository.delete(customer);
-    }
-
-    @Override
-    public Customer getCustomerByEmail(String email) {
-        return customerRepository.getCustomerByEmail(email);
-    }
-
-    @Override
     public CustomerAddress getCustomerAddress(long id) {
         return customerAddressRepository.getCustomerAddressById(id);
     }
@@ -216,4 +206,5 @@ public class CustomerServiceImpl implements CustomerService {
         customerCartRepository.delete(cartItem);
         return customerCartRepository.findAllByCustomerPhone(customerPhone);
     }
+
 }

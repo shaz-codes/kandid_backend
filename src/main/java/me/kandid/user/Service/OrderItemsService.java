@@ -1,12 +1,12 @@
 package me.kandid.user.Service;
 
-import me.kandid.user.Model.Customer.OrderItems;
+import me.kandid.user.Model.Customer.OrderItem;
 
 import java.util.List;
 
 public interface OrderItemsService {
 
-    List<OrderItems> getNumberOfOrderItemsWithSku(String sku);
+    List<OrderItem> getNumberOfOrderItemsWithSku(String sku);
 
 
 }
