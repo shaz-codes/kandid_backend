@@ -1,10 +1,14 @@
 package me.kandid.user.Service;
 
-import me.kandid.user.Model.Product.Product;
 import me.kandid.user.Model.Product.ProductFilter;
-import me.kandid.user.Model.Product.SearchableProduct;
+import me.kandid.user.Model.Product.Types.Product;
+import me.kandid.user.Model.Product.Types.SearchableProduct;
+import me.kandid.user.Model.Requests.OrderRequest;
 import org.opensearch.client.opensearch.core.SearchResponse;
 import org.springframework.data.domain.Pageable;
+
+import java.io.IOException;
+import java.net.URL;
 
 public interface ProductService {
 
@@ -13,4 +17,10 @@ public interface ProductService {
     SearchResponse<SearchableProduct> getProducts(String s, ProductFilter filter, Pageable pageable);
 
     SearchResponse<SearchableProduct> autocomplete(String q);
+
+    URL checkout_prepaid(long customerPhone, OrderRequest orderRequest) throws IOException;
+
+    URL checkout_confirmed(long customerPhone, long orderId) throws IOException;
+
+    URL checkout_cod(long customerPhone, OrderRequest orderRequest) throws IOException;
 }

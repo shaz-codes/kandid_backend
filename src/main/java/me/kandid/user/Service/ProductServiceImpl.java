@@ -1,38 +1,85 @@
 package me.kandid.user.Service;
 
 import me.kandid.user.Exceptions.ProductNotFound;
-import me.kandid.user.Model.Product.Product;
+import me.kandid.user.Exceptions.ProductNotInStock;
+import me.kandid.user.Model.Customer.*;
+import me.kandid.user.Model.Enums.OrderTypes;
 import me.kandid.user.Model.Product.ProductFilter;
-import me.kandid.user.Model.Product.SearchableProduct;
+import me.kandid.user.Model.Product.ProductVariant;
+import me.kandid.user.Model.Product.Types.Product;
+import me.kandid.user.Model.Product.Types.SearchableProduct;
+import me.kandid.user.Model.Requests.OrderRequest;
+import me.kandid.user.Repository.Customer.CustomerAddressRepository;
+import me.kandid.user.Repository.Customer.CustomerCartRepository;
+import me.kandid.user.Repository.Customer.CustomerOrdersRepository;
+import me.kandid.user.Repository.Customer.CustomerRepository;
 import me.kandid.user.Repository.ProductRepository;
+import me.kandid.user.Repository.ProductVariantRepository;
+import me.kandid.user.Utils.Utils;
+import okhttp3.*;
 import org.opensearch.client.opensearch.OpenSearchClient;
 import org.opensearch.client.opensearch._types.FieldValue;
 import org.opensearch.client.opensearch._types.aggregations.Aggregation;
 import org.opensearch.client.opensearch._types.aggregations.TermsAggregation;
-import org.opensearch.client.opensearch._types.query_dsl.Query;
 import org.opensearch.client.opensearch.core.SearchRequest;
 import org.opensearch.client.opensearch.core.SearchResponse;
 import org.opensearch.client.opensearch.core.search.Hit;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.net.URI;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
 public class ProductServiceImpl implements ProductService {
+
+    @Value("${payu.merchantkey}")
+    private String merchantKey;
+
+    @Value("${payu.salt}")
+    private String salt;
+
+
+    @Value("${payu.payments.url}")
+    private String payuPaymentsUrl;
+
+    @Value("${backend.url}")
+    private String backendUrl;
+
     @Autowired
     private ProductRepository productRepository;
 
     @Autowired
+    private ProductVariantRepository productVariantRepository;
+
+    @Autowired
     private OpenSearchClient openSearchClient;
+
+    @Autowired
+    private CustomerRepository customerRepository;
+
+    @Autowired
+    private CustomerOrdersRepository customerOrdersRepository;
+
+    @Autowired
+    private CustomerCartRepository customerCartRepository;
+
+    @Autowired
+    CustomerAddressRepository customerAddressRepository;
 
     @Override
     public Product getProduct(String code) {
+//        TODO: Implement discounts
         System.out.println(code.split("-")[0]);
         List<Product> products = productRepository.getProductsByCodeContainingAndActive(code.split("-")[0], true);
         if (products.isEmpty()) {
@@ -72,7 +119,7 @@ public class ProductServiceImpl implements ProductService {
                                                                                mm -> mm.query(s).fuzziness("AUTO")));
                                                                    }
                                                                    if (filter != null) {
-                                                                       b.filter(createFilter(filter));
+                                                                       b.filter(Utils.createFilter(filter));
                                                                    }
                                                                    b.must(m -> m.match(mm -> mm.field("active")
                                                                                                .query(FieldValue.of(
@@ -133,76 +180,229 @@ public class ProductServiceImpl implements ProductService {
     }
 
 
-    private List<Query> createFilter(ProductFilter filter) {
-        List<Query> filters = new ArrayList<>();
+    @Override
+    public URL checkout_prepaid(long customerPhone, OrderRequest orderRequest) throws IOException {
+        validateOrderRequest(orderRequest);
 
-        if (filter.getAesthetic() != null) {
-            filters.add(createFieldQ("aesthetic", filter.getAesthetic()));
-        }
-        if (filter.getMaterial() != null) {
-            filters.add(createFieldQ("material", filter.getMaterial()));
-        }
-        if (filter.getColor() != null) {
-            filters.add(createFieldQ("color", filter.getColor()));
-        }
-        if (filter.getOccasion() != null) {
-            filters.add(createFieldQ("occasion", filter.getOccasion()));
-        }
-        if (filter.getSleeve() != null) {
-            filters.add(createFieldQ("sleeve", filter.getSleeve()));
-        }
-        if (filter.getFit() != null) {
-            filters.add(createFieldQ("fit", filter.getFit()));
-        }
-        if (filter.getFitType() != null) {
-            filters.add(createFieldQ("fitType", filter.getFitType()));
-        }
-        if (filter.getPattern() != null) {
-            filters.add(createFieldQ("pattern", filter.getPattern()));
-        }
-        if (filter.getNeckline() != null) {
-            filters.add(createFieldQ("neckline", filter.getNeckline()));
-        }
-        if (filter.getClosure() != null) {
-            filters.add(createFieldQ("closure", filter.getClosure()));
-        }
-        if (filter.getClosureType() != null) {
-            filters.add(createFieldQ("closureType", filter.getClosureType()));
-        }
-        if (filter.getRiseStyle() != null) {
-            filters.add(createFieldQ("riseStyle", filter.getRiseStyle()));
-        }
-        if (filter.getStyle() != null) {
-            filters.add(createFieldQ("style", filter.getStyle()));
-        }
-        if (filter.getTrend() != null) {
-            filters.add(createFieldQ("trend", filter.getTrend()));
-        }
-        if (filter.getCategory() != null) {
-            filters.add(createFieldQ("category", filter.getCategory()));
-        }
-        if (filter.getSubCategory() != null) {
-            filters.add(createFieldQ("subCategory", filter.getSubCategory()));
-        }
-        if (filter.getBrand() != null) {
-            filters.add(createFieldQ("brand", filter.getBrand()));
-        }
-        return filters;
-    }
+        Customer customer = customerRepository.getCustomerByPhone(customerPhone);
+        long orderId = System.currentTimeMillis();
 
+        CustomerOrder customerOrder = new CustomerOrder();
+        customerOrder.setId(orderId);
+        customerOrder.setCustomerPhone(customerPhone);
+        customerOrder.setType(orderRequest.getOrderType());
 
-    private Query createFieldQ(String field, List<String> list) {
-        return Query.of(
-                q -> q
-                        .terms(
-                                t -> t.field(field)
-                                      .terms(
-                                              tt -> tt
-                                                      .value(list.stream().map(FieldValue::of).toList()
-                                                      )
-                                      )
-                        )
+        CustomerAddress address = customerAddressRepository.getCustomerAddressById(orderRequest.getAddress().getId());
+        if (address == null) throw new RuntimeException("Address ID not found");
+        customerOrder.setCustomerAddress(address);
+
+        List<ProductVariant> variants = new ArrayList<>();
+        List<OrderItem> orderItems = prepareOrderItems(orderRequest, String.valueOf(customerPhone), variants);
+        double bill = calculateBill(orderItems);
+        customerOrder.setBillAmount(bill);
+        customerOrder.setItems(orderItems);
+        customerOrder.setStatus("PENDING");
+
+        // Prepare PayU payment parameters
+        String txnId = "ORD" + orderId;
+        String firstName = getFirstName(customer.getName());
+        String lastName = getLastName(customer.getName());
+        String amount = String.valueOf(customerOrder.getBillAmount());
+        Map<String, String> params = Utils.createHashMap(
+                merchantKey, amount, firstName, customer.getEmail(),
+                String.valueOf(customer.getPhone()), "Payment for order on Kandid",
+                backendUrl + "/success", backendUrl + "/failure", txnId
         );
+
+        params.put("hash", Utils.generateHashPaymentsAPI(params, salt));
+        params.put("lastname", lastName);
+
+        // Send request
+        Request request = new Request.Builder()
+                .url(URI.create(payuPaymentsUrl).toURL())
+                .post(RequestBody.create(Utils.encodeParams(params),
+                        MediaType.parse("application/x-www-form-urlencoded")))
+                .build();
+
+        try (Response response = new OkHttpClient.Builder()
+                .followRedirects(false)
+                .followSslRedirects(false)
+                .build()
+                .newCall(request).execute()) {
+
+            if (response.isSuccessful() && response.body() != null) {
+                throw new RuntimeException(response.body().string());
+            }
+
+            URL paymentUrl = URI.create(Objects.requireNonNull(response.header("Location"))).toURL();
+            customerOrder.setPaymentLink(paymentUrl);
+
+            productVariantRepository.save(variants.getFirst());
+            customerOrdersRepository.save(customerOrder);
+            return paymentUrl;
+        }
     }
 
+    @Override
+    public URL checkout_confirmed(long customerPhone, long orderId) throws IOException {
+        CustomerOrder customerOrder = customerOrdersRepository.getCustomerOrderById(orderId);
+        double bill = customerOrder.getBillAmount();
+        if (customerOrder.getType().equals(OrderTypes.TRY_AND_BUY)) bill = bill - 35.0;
+        Customer customer = customerRepository.getCustomerByPhone(customerPhone);
+        String firstName = getFirstName(customer.getName());
+        String lastName = getLastName(customer.getName());
+        String amount = String.valueOf(bill); // Consider using actual `bill` if dynamic pricing
+        Map<String, String> params = Utils.createHashMap(
+                merchantKey, amount, firstName, customer.getEmail(),
+                String.valueOf(customer.getPhone()), "Payment for try and buy on Kandid",
+                backendUrl + "/success", backendUrl + "/failure", customerOrder.getId()
+        );
+
+        params.put("hash", Utils.generateHashPaymentsAPI(params, salt));
+        params.put("lastname", lastName);
+
+        Request request = new Request.Builder()
+                .url(URI.create(payuPaymentsUrl).toURL())
+                .post(RequestBody.create(Utils.encodeParams(params),
+                        MediaType.parse("application/x-www-form-urlencoded")))
+                .build();
+
+        try (Response response = new OkHttpClient.Builder()
+                .followRedirects(false)
+                .followSslRedirects(false)
+                .build()
+                .newCall(request).execute()) {
+
+            if (response.isSuccessful() && response.body() != null) {
+                throw new RuntimeException(response.body().string());
+            }
+
+            URL paymentUrl = URI.create(Objects.requireNonNull(response.header("Location"))).toURL();
+            customerOrder.setPaymentLink(paymentUrl);
+            customerOrdersRepository.save(customerOrder);
+            return paymentUrl;
+        }
+    }
+
+    @Override
+    public URL checkout_cod(long customerPhone, OrderRequest orderRequest) throws IOException {
+        validateOrderRequest(orderRequest);
+
+        Customer customer = customerRepository.getCustomerByPhone(customerPhone);
+        long orderId = System.currentTimeMillis();
+
+        CustomerOrder customerOrder = new CustomerOrder();
+        customerOrder.setId(orderId);
+        customerOrder.setCustomerPhone(customerPhone);
+        customerOrder.setType(orderRequest.getOrderType());
+
+        CustomerAddress address = customerAddressRepository.getCustomerAddressById(orderRequest.getAddress().getId());
+        if (address == null) throw new RuntimeException("Address ID not found");
+        customerOrder.setCustomerAddress(address);
+
+        List<ProductVariant> variants = new ArrayList<>();
+        List<OrderItem> orderItems = prepareOrderItems(orderRequest, String.valueOf(customerPhone), variants);
+        double bill = calculateBill(orderItems);
+        customerOrder.setBillAmount(bill);
+        customerOrder.setItems(orderItems);
+
+        if (orderRequest.getOrderType() == OrderTypes.REGULAR) {
+            customerOrder.setStatus("PLACED");
+            productVariantRepository.save(variants.getFirst());
+            customerOrdersRepository.save(customerOrder);
+            return null; // or return a confirmation message/URL if needed
+        }
+
+// Payment flow for non-REGULAR order types
+        customerOrder.setStatus("PAYMENT_PENDING");
+
+        String txnId = "ORD" + orderId;
+        String firstName = getFirstName(customer.getName());
+        String lastName = getLastName(customer.getName());
+        String amount = "35.0"; // Consider using actual `bill` if dynamic pricing
+        Map<String, String> params = Utils.createHashMap(
+                merchantKey, amount, firstName, customer.getEmail(),
+                String.valueOf(customer.getPhone()), "Payment for try and buy on Kandid",
+                backendUrl + "/success", backendUrl + "/failure", txnId
+        );
+
+        params.put("hash", Utils.generateHashPaymentsAPI(params, salt));
+        params.put("lastname", lastName);
+
+        Request request = new Request.Builder()
+                .url(URI.create(payuPaymentsUrl).toURL())
+                .post(RequestBody.create(Utils.encodeParams(params),
+                        MediaType.parse("application/x-www-form-urlencoded")))
+                .build();
+
+        try (Response response = new OkHttpClient.Builder()
+                .followRedirects(false)
+                .followSslRedirects(false)
+                .build()
+                .newCall(request).execute()) {
+
+            if (response.isSuccessful() && response.body() != null) {
+                throw new RuntimeException(response.body().string());
+            }
+
+            URL paymentUrl = URI.create(Objects.requireNonNull(response.header("Location"))).toURL();
+            customerOrder.setPaymentLink(paymentUrl);
+
+            productVariantRepository.save(variants.getFirst());
+            customerOrdersRepository.save(customerOrder);
+            return paymentUrl;
+        }
+    }
+
+
+//    Helper functions
+
+    private void processOrder(int quantity, List<ProductVariant> variants, List<OrderItem> orderItems, String sku) {
+        ProductVariant variant = productVariantRepository.findBySku(sku);
+        if (variant == null) {
+            throw new ProductNotFound(sku);
+        }
+        if (variant.getAvailableStock() - quantity <= 0) {
+            throw new ProductNotInStock(sku);
+        }
+        variant.setAvailableStock(variant.getAvailableStock() - quantity);
+        Product p = productRepository.getProductByCode(variant.getProductCode());
+        OrderItem orderItem = OrderItem.fromProduct(p, variant.getSku(), quantity);
+        orderItems.add(orderItem);
+        variants.add(variant);
+    }
+
+    private void validateOrderRequest(OrderRequest request) {
+        if (request.getAddress() == null) throw new RuntimeException("Address is null");
+        if (request.getOrderType() == null) throw new RuntimeException("OrderType is null");
+        if (request.getBuynow() == null) throw new RuntimeException("BuyNow is null");
+    }
+
+    private List<OrderItem> prepareOrderItems(OrderRequest request, String phone, List<ProductVariant> variants) {
+        List<OrderItem> items = new ArrayList<>();
+        if (Boolean.TRUE.equals(request.getBuynow())) {
+            processOrder(request.getQuantity(), variants, items, request.getSku());
+        } else {
+            List<CartItems> cartItems = customerCartRepository.findAllByCustomerPhone(Long.parseLong(phone));
+            if (cartItems.isEmpty()) throw new RuntimeException("Cart is empty");
+            for (CartItems item : cartItems) {
+                processOrder(item.getQuantity(), variants, items, item.getProductSku());
+            }
+        }
+        return items;
+    }
+
+    private double calculateBill(List<OrderItem> items) {
+        double bill = items.stream().mapToDouble(i -> i.getPricePaid() * i.getQuantity()).sum();
+        return bill <= 0 ? 100 : bill;
+    }
+
+    private String getFirstName(String fullName) {
+        return fullName.contains(" ") ? fullName.split(" ")[0] : fullName;
+    }
+
+    private String getLastName(String fullName) {
+        int index = fullName.indexOf(' ');
+        return index != -1 ? fullName.substring(index + 1) : "";
+    }
 }

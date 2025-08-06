@@ -71,6 +71,9 @@ public class ProductController {
     }
 
 
+    @Operation(
+            summary = "Search with filters and paging"
+    )
     @PostMapping("/")
     public ResponseEntity<?> getProducts(@RequestParam(
                                                  value = "search",
@@ -97,6 +100,10 @@ public class ProductController {
                 HttpStatus.OK);
     }
 
+    @Operation(
+            summary = "Autocomplete",
+            description = "for autocomplete in the searchbar"
+    )
     @GetMapping("autocomplete")
     public ResponseEntity<?> autoComplete(@RequestParam("q") String q) {
         return new ResponseEntity<>(productService.autocomplete(q).hits().hits().stream().map(Hit::source),
