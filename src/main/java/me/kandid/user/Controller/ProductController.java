@@ -7,9 +7,9 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import me.kandid.user.Model.Product.Product;
 import me.kandid.user.Model.Product.ProductFilter;
-import me.kandid.user.Model.Product.SearchableProduct;
+import me.kandid.user.Model.Product.Types.Product;
+import me.kandid.user.Model.Product.Types.SearchableProduct;
 import me.kandid.user.Service.ProductService;
 import org.opensearch.client.opensearch._types.aggregations.StringTermsBucket;
 import org.opensearch.client.opensearch.core.SearchResponse;
@@ -71,6 +71,9 @@ public class ProductController {
     }
 
 
+    @Operation(
+            summary = "Search with filters and paging"
+    )
     @PostMapping("/")
     public ResponseEntity<?> getProducts(@RequestParam(
                                                  value = "search",
@@ -97,6 +100,10 @@ public class ProductController {
                 HttpStatus.OK);
     }
 
+    @Operation(
+            summary = "Autocomplete",
+            description = "for autocomplete in the searchbar"
+    )
     @GetMapping("autocomplete")
     public ResponseEntity<?> autoComplete(@RequestParam("q") String q) {
         return new ResponseEntity<>(productService.autocomplete(q).hits().hits().stream().map(Hit::source),

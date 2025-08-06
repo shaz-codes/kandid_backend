@@ -15,4 +15,6 @@ public interface ProductVariantRepository extends JpaRepository<ProductVariant, 
     void deleteAllByProductCode(String productCode);
 
     ProductVariant findBySku(String sku);
+
+    List<ProductVariant> findAllBySku(String sku);
 }

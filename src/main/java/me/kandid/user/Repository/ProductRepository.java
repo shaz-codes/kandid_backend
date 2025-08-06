@@ -1,6 +1,6 @@
 package me.kandid.user.Repository;
 
-import me.kandid.user.Model.Product.Product;
+import me.kandid.user.Model.Product.Types.Product;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;

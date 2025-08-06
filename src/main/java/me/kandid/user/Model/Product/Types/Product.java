@@ -1,14 +1,19 @@
-package me.kandid.user.Model.Product;
+package me.kandid.user.Model.Product.Types;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.persistence.*;
 import lombok.Data;
-import org.springframework.data.annotation.Id;
+import me.kandid.user.Model.Product.Brand;
+import me.kandid.user.Model.Product.Discount;
+import me.kandid.user.Model.Product.ProductVariant;
+import me.kandid.user.Model.Product.Visuals;
 
 import java.util.List;
 
-
 @Data
-public class SearchableProduct {
+@Entity
+@Schema(description = "Product entity representing a fashion item with all its attributes and specifications")
+public class Product {
     @Id
     @Schema(
             description = "Unique product code identifier",
@@ -17,14 +22,11 @@ public class SearchableProduct {
     )
     private String code;
 
-
     @Schema(
             description = "Product name/title",
             example = "Cotton Casual Shirt"
     )
     private String name;
-
-    private List<Visuals> visuals;
 
     @Schema(
             description = "Detailed description of the product",
@@ -33,20 +35,36 @@ public class SearchableProduct {
     private String description;
 
     @Schema(
+            description = "Whether the product is active in the system",
+            example = "true"
+    )
+    private Boolean active;
+
+    @Schema(
             description = "Whether the product is available for purchase (derived from inventory)",
             example = "true"
     )
     private Boolean available;
 
-
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "brand_id")
     @Schema(description = "Brand information for this product")
-    private String brand;
+    private Brand brand;
 
+    @OneToMany(fetch = FetchType.EAGER)
+    @JoinColumn(name = "product_code")
+    @Schema(description = "Visual assets (images, videos) for the product")
+    private List<Visuals> visuals;
+
+    //    @Transient
     @Schema(
             description = "Current selling price in paise (calculated dynamically with discounts)",
             example = "2999"
     )
     private double sellingPrice;
+
+    @OneToMany(fetch = FetchType.EAGER)
+    private List<Discount> discounts;
 
     @Schema(
             description = "Maximum Retail Price in paise",
@@ -66,6 +84,13 @@ public class SearchableProduct {
     )
     private String subCategory;
 
+    @OneToMany(
+            fetch = FetchType.EAGER,
+            mappedBy = "productCode"
+    )
+    @Schema(description = "Available inventory variants (sizes and stock)")
+    private List<ProductVariant> inventory;
+
     // Product specification details
     @Schema(
             description = "Material composition",
@@ -74,16 +99,23 @@ public class SearchableProduct {
     private String material;
 
     @Schema(
-            description = "Color with Code",
-            example = "White#ffffff"
+            description = "Primary color",
+            example = "Blue"
     )
     private String color;
 
     @Schema(
             description = "Primary color",
-            example = "Blue"
+            example = "#ffffff"
     )
-    private String colorName;
+    private String colorCode;
+
+    @Schema(
+            description = "a map of colors along with it's product code used to navigate to a different color",
+            example = "{\"White\":\"PROD001-WHITE\",\"\"}"
+    )
+    @Transient
+    private List<Colors> colors;
 
     @Schema(
             description = "Suitable occasions",
@@ -157,8 +189,16 @@ public class SearchableProduct {
     )
     private String trend;
 
-    @Schema(
-            description = "Whether Product is visible to the public or not"
-    )
-    private Boolean active;
+    @Data
+    public static class Colors {
+        String productCode;
+        String colorCode;
+        String color;
+
+        public Colors(String productCode, String colorCode, String color) {
+            this.productCode = productCode;
+            this.colorCode = colorCode;
+            this.color = color;
+        }
+    }
 }

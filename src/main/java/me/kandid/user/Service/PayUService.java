@@ -1,8 +1,11 @@
 package me.kandid.user.Service;
 
-import me.kandid.user.Model.Customer.CustomerOrder;
+import java.io.IOException;
+import java.net.URL;
 
 public interface PayUService {
 
-    String checkOut(CustomerOrder order, String surl, String furl) throws Exception;
+    URL success(String s) throws IOException;
+
+    URL failure(String s) throws IOException;
 }
