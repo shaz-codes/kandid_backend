@@ -20,10 +20,6 @@ public interface CustomerService {
 
     Customer updateCustomer(Customer customer);
 
-    void deleteCustomer(Customer customer);
-
-    Customer getCustomerByEmail(String email);
-
     CustomerAddress getCustomerAddress(long id);
 
     List<CustomerAddress> getAllCustomerAddress(long customerPhone);
