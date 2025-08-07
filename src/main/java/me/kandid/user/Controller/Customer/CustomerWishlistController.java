@@ -25,7 +25,7 @@ public class CustomerWishlistController {
     @Autowired
     private CustomerService customerService;
 
-    @GetMapping()
+    @GetMapping
     @Operation(
             summary = "Get Wishlist",
             description = "Retrieves the customer's wishlist using JWT token for authentication."
@@ -68,7 +68,8 @@ public class CustomerWishlistController {
             value = {
                     @ApiResponse(
                             responseCode = "200",
-                            description = "Product added to wishlist successfully"
+                            description = "Product added to wishlist successfully",
+                            content = @Content()
                     ),
             }
     )
@@ -88,7 +89,8 @@ public class CustomerWishlistController {
             value = {
                     @ApiResponse(
                             responseCode = "200",
-                            description = "Product removed from wishlist successfully"
+                            description = "Product removed from wishlist successfully",
+                            content = @Content()
                     )
             }
     )
