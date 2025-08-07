@@ -19,9 +19,10 @@ import java.util.Map;
 public class Utils {
     public static long decodePhoneFromJWT(String token) {
         DecodedJWT jwt = JWT
-                .require(Algorithm.HMAC256(System.getenv("ENCRYPT_KEY_KANDID")))
-                .withIssuer("Kandid User")
-                .build().verify(token.replace("Bearer ", ""));
+//                .require(Algorithm.HMAC256(System.getenv("ENCRYPT_KEY_KANDID")))
+.require(Algorithm.HMAC256("i0vriteFm08yJZxXrmuWiY7hsDDZhIcW"))
+.withIssuer("Kandid User")
+.build().verify(token.replace("Bearer ", ""));
 
         return Long.parseLong(jwt.getSubject());
     }
