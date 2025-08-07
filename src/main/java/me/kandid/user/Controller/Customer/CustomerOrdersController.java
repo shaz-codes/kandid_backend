@@ -143,7 +143,6 @@ public class CustomerOrdersController {
                                               @RequestHeader(name = "Authorization") String token)
             throws Exception {
         long phone = Utils.decodePhoneFromJWT(token);
-        // TODO: create custom order class
         URL url = productService.checkout_prepaid(phone, order);
         return ResponseEntity.status(HttpStatus.FOUND).header("Location", url.toString()).build();
     }
@@ -164,7 +163,6 @@ public class CustomerOrdersController {
                                           @RequestHeader(name = "Authorization") String token)
             throws Exception {
         long phone = Utils.decodePhoneFromJWT(token);
-        // TODO: create custom order class
         URL url = productService.checkout_cod(phone, order);
         return ResponseEntity.status(HttpStatus.FOUND).header("Location", url.toString()).build();
     }

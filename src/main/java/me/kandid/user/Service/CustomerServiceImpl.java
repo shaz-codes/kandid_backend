@@ -1,6 +1,8 @@
 package me.kandid.user.Service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import me.kandid.user.Exceptions.ProductNotFound;
+import me.kandid.user.Exceptions.WishlistDoesNotExist;
 import me.kandid.user.Model.Customer.*;
 import me.kandid.user.Model.MessageCentral.Response;
 import me.kandid.user.Model.Product.Types.Product;
@@ -15,6 +17,8 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 public class CustomerServiceImpl implements CustomerService {
@@ -145,7 +149,16 @@ public class CustomerServiceImpl implements CustomerService {
 
     @Override
     public CustomerWishlist getCustomerWishlist(long customerPhone) {
-        return customerWishlistRepository.getByCustomerPhone(customerPhone);
+        CustomerWishlist w = customerWishlistRepository.getByCustomerPhone(customerPhone);
+        if (w == null) {
+            throw new WishlistDoesNotExist(customerPhone);
+        }
+        w.setProducts(w.getProducts().stream()
+                       .peek(p -> p.setInWishlist(
+                               true))
+                       .collect(
+                               Collectors.toSet()));
+        return w;
     }
 
     @Override
@@ -156,19 +169,23 @@ public class CustomerServiceImpl implements CustomerService {
     }
 
     @Override
-    public CustomerWishlist addToCustomerWishlist(long customerPhone, String productCode) {
+    public void addToCustomerWishlist(long customerPhone, String productCode) {
         CustomerWishlist customerWishlist = customerWishlistRepository.getByCustomerPhone(customerPhone);
-        List<Product> products = customerWishlist.getProducts();
-        products.add(productRepository.getProductByCode(productCode));
-        return customerWishlistRepository.save(customerWishlist);
+        Set<Product> products = customerWishlist.getProducts();
+        Product p = productRepository.getProductByCode(productCode);
+        if (p == null) throw new ProductNotFound(productCode);
+        products.add(p);
+        customerWishlistRepository.save(customerWishlist);
     }
 
     @Override
-    public CustomerWishlist removeFromCustomerWishlist(long customerPhone, String productCode) {
+    public void removeFromCustomerWishlist(long customerPhone, String productCode) {
         CustomerWishlist customerWishlist = customerWishlistRepository.getByCustomerPhone(customerPhone);
-        List<Product> products = customerWishlist.getProducts();
-        products.remove(productRepository.getProductByCode(productCode));
-        return customerWishlistRepository.save(customerWishlist);
+        Set<Product> products = customerWishlist.getProducts();
+        Product p = productRepository.getProductByCode(productCode);
+        if (p == null) throw new ProductNotFound(productCode);
+        products.remove(p);
+        customerWishlistRepository.save(customerWishlist);
     }
 
     @Override

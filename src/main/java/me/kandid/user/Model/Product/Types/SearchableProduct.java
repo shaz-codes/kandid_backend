@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import me.kandid.user.Model.Product.Visuals;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.Transient;
 
 import java.util.List;
 
@@ -18,6 +19,8 @@ public class SearchableProduct {
     )
     private String code;
 
+    @Transient
+    private boolean inWishlist;
 
     @Schema(
             description = "Product name/title",

@@ -22,6 +22,9 @@ public class Product {
     )
     private String code;
 
+    @Transient
+    private boolean inWishlist;
+
     @Schema(
             description = "Product name/title",
             example = "Cotton Casual Shirt"

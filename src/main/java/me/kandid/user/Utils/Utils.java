@@ -78,7 +78,6 @@ public class Utils {
         Map<String, String> map = new HashMap<>();
         String[] pairs = newString.split("&");
         for (String pair : pairs) {
-            System.out.println(pair);
             String[] keyValue = pair.split("=");
             if (keyValue.length >= 2) {
                 map.put(keyValue[0], keyValue[1]);

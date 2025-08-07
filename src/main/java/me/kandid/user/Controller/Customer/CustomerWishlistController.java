@@ -41,7 +41,7 @@ public class CustomerWishlistController {
                             )
                     ),
                     @ApiResponse(
-                            responseCode = "404",
+                            responseCode = "500",
                             description = "Wishlist not found",
                             content = @Content(
                                     mediaType = "application/json",
@@ -68,26 +68,15 @@ public class CustomerWishlistController {
             value = {
                     @ApiResponse(
                             responseCode = "200",
-                            description = "Product added to wishlist successfully",
-                            content = @Content(
-                                    mediaType = "application/json",
-                                    schema = @Schema(implementation = CustomerWishlist.class)
-                            )
-                    ),
-                    @ApiResponse(
-                            responseCode = "400",
-                            description = "Bad request, invalid product code",
-                            content = @Content(
-                                    mediaType = "application/json",
-                                    schema = @Schema(implementation = String.class)
-                            )
+                            description = "Product added to wishlist successfully"
                     ),
             }
     )
     public ResponseEntity<CustomerWishlist> addToWishlist(@RequestHeader(name = "Authorization") String token,
-                                                          @RequestBody String productCode) {
+                                                          @RequestParam String code) {
         long phone = Utils.decodePhoneFromJWT(token);
-        return new ResponseEntity<>(customerService.addToCustomerWishlist(phone, productCode), HttpStatus.OK);
+        customerService.addToCustomerWishlist(phone, code);
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 
     @DeleteMapping("delete")
@@ -99,25 +88,14 @@ public class CustomerWishlistController {
             value = {
                     @ApiResponse(
                             responseCode = "200",
-                            description = "Product removed from wishlist successfully",
-                            content = @Content(
-                                    mediaType = "application/json",
-                                    schema = @Schema(implementation = CustomerWishlist.class)
-                            )
-                    ),
-                    @ApiResponse(
-                            responseCode = "404",
-                            description = "Product not found in wishlist",
-                            content = @Content(
-                                    mediaType = "application/json",
-                                    schema = @Schema(implementation = String.class)
-                            )
-                    ),
+                            description = "Product removed from wishlist successfully"
+                    )
             }
     )
     public ResponseEntity<CustomerWishlist> removeFromWishlist(@RequestHeader(name = "Authorization") String token,
-                                                               @RequestBody String productCode) {
+                                                               @RequestParam String code) {
         long phone = Utils.decodePhoneFromJWT(token);
-        return new ResponseEntity<>(customerService.removeFromCustomerWishlist(phone, productCode), HttpStatus.OK);
+        customerService.removeFromCustomerWishlist(phone, code);
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 }
