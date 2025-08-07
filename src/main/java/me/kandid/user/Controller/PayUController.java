@@ -39,8 +39,6 @@ public class PayUController {
     )
     @PostMapping("/success")
     public ResponseEntity<?> success(@RequestBody String s) throws IOException {
-//        TODO: implement order status checking
-
         return ResponseEntity.status(HttpStatus.OK).header("Location", payUService.success(s).toString()).build();
     }
 
@@ -57,7 +55,6 @@ public class PayUController {
     )
     @PostMapping("/failure")
     public ResponseEntity<?> failure(@RequestBody String s) throws IOException {
-//        TODO: implement order status checking
         return ResponseEntity.status(HttpStatus.OK).header("Location", payUService.failure(s).toString()).build();
     }
 }

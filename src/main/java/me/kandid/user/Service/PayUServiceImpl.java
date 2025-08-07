@@ -2,6 +2,7 @@ package me.kandid.user.Service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import me.kandid.user.Model.Customer.CustomerOrder;
+import me.kandid.user.Model.Responses.PayUTransactionDetailsResponse;
 import me.kandid.user.Model.Responses.PayUVerifyResponse;
 import me.kandid.user.Repository.Customer.CustomerOrdersRepository;
 import me.kandid.user.Utils.Utils;
@@ -17,7 +18,6 @@ import java.net.URI;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 
 @Service
 public class PayUServiceImpl implements PayUService {
@@ -38,7 +38,6 @@ public class PayUServiceImpl implements PayUService {
 
     @Override
     public URL success(String s) throws IOException {
-        System.out.println(s);
         Map<String, String> params = Utils.decodeForm(s);
 
 
@@ -58,34 +57,37 @@ public class PayUServiceImpl implements PayUService {
         try (Response response = client.newCall(request).execute()) {
             if (response.isSuccessful()) {
                 assert response.body() != null;
+                String bodyStr = response.body().string();
                 ObjectMapper mapper = new ObjectMapper();
-                PayUVerifyResponse res = mapper.readValue(response.body().string(), PayUVerifyResponse.class);
+                PayUVerifyResponse res = mapper.readValue(bodyStr, PayUVerifyResponse.class);
                 if (res.getStatus() == 0) {
                     LOGGER.error(res.getMsg());
                 }
-                if (Objects.equals(res.getTransactionDetails().getStatus(), "success")) {
+                PayUTransactionDetailsResponse deets = res.getTransactionDetails().values().stream().toList()
+                                                          .getFirst();
+                if (deets.getStatus().equals("success")) {
                     CustomerOrder order = customerOrdersRepository.getCustomerOrderById(
-                            Long.parseLong(res.getTransactionDetails().getTxnid().replace("ORD", "")));
-                    order.setPaymentStatus(res.getTransactionDetails().getStatus());
+                            Long.parseLong(deets.getTxnid().replace("ORD", "")));
+                    order.setPaymentStatus(deets.getStatus());
                     order.setPaymentLink(null);
-                    order.setPaymentMethod(res.getTransactionDetails().getPaymentSource());
-                    order.setBankRefNumber(res.getTransactionDetails().getBankRefNum());
+                    order.setPaymentMethod(deets.getPaymentSource());
+                    order.setBankRefNumber(deets.getBankRefNum());
                     if (order.getStatus().equals("PENDING")) {
                         order.setStatus("PLACED");
                     }
                     customerOrdersRepository.save(order);
-                    return URI.create("http://localhost:3000/profile/orders/details/" + res.getTransactionDetails()
-                                                                                           .getTxnid() +
+                    return URI.create("http://localhost:3000/profile/orders/details/" + deets
+                            .getTxnid() +
                             "?status=success").toURL();
                 } else {
                     CustomerOrder order = customerOrdersRepository.getCustomerOrderById(
-                            Long.parseLong(res.getTransactionDetails().getTxnid().replace("ORD", "")));
-                    order.setPaymentStatus(res.getTransactionDetails().getStatus());
+                            Long.parseLong(deets.getTxnid().replace("ORD", "")));
+                    order.setPaymentStatus(deets.getStatus());
                     order.setPaymentLink(null);
                     order.setStatus("FAILED");
                     customerOrdersRepository.save(order);
-                    return URI.create("http://localhost:3000/profile/orders/details/" + res.getTransactionDetails()
-                                                                                           .getTxnid() +
+                    return URI.create("http://localhost:3000/profile/orders/details/" + deets
+                            .getTxnid() +
                             "?status=failure").toURL();
                 }
             } else {
@@ -100,6 +102,7 @@ public class PayUServiceImpl implements PayUService {
     @Override
     public URL failure(String s) throws IOException {
         System.out.println(s);
+//        TODO: add items back to the inventory
         Map<String, String> params = Utils.decodeForm(s);
 
 
@@ -124,14 +127,16 @@ public class PayUServiceImpl implements PayUService {
                 if (res.getStatus() == 0) {
                     LOGGER.error(res.getMsg());
                 }
+                PayUTransactionDetailsResponse deets = res.getTransactionDetails().values().stream().toList()
+                                                          .getFirst();
                 CustomerOrder order = customerOrdersRepository.getCustomerOrderById(
-                        Long.parseLong(res.getTransactionDetails().getTxnid().replace("ORD", "")));
-                order.setPaymentStatus(res.getTransactionDetails().getStatus());
+                        Long.parseLong(deets.getTxnid().replace("ORD", "")));
+                order.setPaymentStatus(deets.getStatus());
                 order.setPaymentLink(null);
                 order.setStatus("FAILED");
                 customerOrdersRepository.save(order);
-                return URI.create("http://localhost:3000/profile/orders/details/" + res.getTransactionDetails()
-                                                                                       .getTxnid() +
+                return URI.create("http://localhost:3000/profile/orders/details/" + deets
+                        .getTxnid() +
                         "?status=failure").toURL();
 
             } else {
