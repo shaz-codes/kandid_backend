@@ -211,7 +211,7 @@ public class ProductServiceImpl implements ProductService {
         Map<String, String> params = Utils.createHashMap(
                 merchantKey, amount, firstName, customer.getEmail(),
                 String.valueOf(customer.getPhone()), "Payment for order on Kandid",
-                backendUrl + "/success", backendUrl + "/failure", txnId
+                backendUrl + "success", backendUrl + "failure", txnId
         );
 
         params.put("hash", Utils.generateHashPaymentsAPI(params, salt));
@@ -255,7 +255,7 @@ public class ProductServiceImpl implements ProductService {
         Map<String, String> params = Utils.createHashMap(
                 merchantKey, amount, firstName, customer.getEmail(),
                 String.valueOf(customer.getPhone()), "Payment for try and buy on Kandid",
-                backendUrl + "/success", backendUrl + "/failure", customerOrder.getId()
+                backendUrl + "success", backendUrl + "failure", customerOrder.getId()
         );
 
         params.put("hash", Utils.generateHashPaymentsAPI(params, salt));
@@ -323,7 +323,7 @@ public class ProductServiceImpl implements ProductService {
         Map<String, String> params = Utils.createHashMap(
                 merchantKey, amount, firstName, customer.getEmail(),
                 String.valueOf(customer.getPhone()), "Payment for try and buy on Kandid",
-                backendUrl + "/success", backendUrl + "/failure", txnId
+                backendUrl + "success", backendUrl + "failure", txnId
         );
 
         params.put("hash", Utils.generateHashPaymentsAPI(params, salt));
