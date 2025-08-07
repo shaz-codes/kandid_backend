@@ -37,7 +37,7 @@ public class JWTFilter extends OncePerRequestFilter {
 
             try {
                 DecodedJWT jwt = JWT
-                        .require(Algorithm.HMAC256(System.getenv("ENCRYPT_KEY_KANDID")))
+                        .require(Algorithm.HMAC256("i0vriteFm08yJZxXrmuWiY7hsDDZhIcW"))
                         .withIssuer("Kandid User")
                         .build().verify(token);
 
