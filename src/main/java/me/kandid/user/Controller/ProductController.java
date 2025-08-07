@@ -9,20 +9,16 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import me.kandid.user.Model.Product.ProductFilter;
 import me.kandid.user.Model.Product.Types.Product;
-import me.kandid.user.Model.Product.Types.SearchableProduct;
+import me.kandid.user.Model.Responses.SearchResult;
 import me.kandid.user.Service.ProductService;
-import org.opensearch.client.opensearch._types.aggregations.StringTermsBucket;
-import org.opensearch.client.opensearch.core.SearchResponse;
+import me.kandid.user.Utils.Utils;
 import org.opensearch.client.opensearch.core.search.Hit;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.HashMap;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 @RestController
 @CrossOrigin
@@ -62,8 +58,15 @@ public class ProductController {
                     description = "Unique product code identifier",
                     example = "PROD001",
                     required = true
-            ) @PathVariable String code) {
-        Product product = productService.getProduct(code);
+            ) @PathVariable String code, @RequestHeader(
+                    name = HttpHeaders.AUTHORIZATION,
+                    required = false
+            ) String token) {
+        long phone = -1;
+        if (token != null) {
+            phone = Utils.decodePhoneFromJWT(token);
+        }
+        Product product = productService.getProduct(code, phone);
         if (product == null) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
@@ -74,7 +77,7 @@ public class ProductController {
     @Operation(
             summary = "Search with filters and paging"
     )
-    @PostMapping("/")
+    @PostMapping("")
     public ResponseEntity<?> getProducts(@RequestParam(
                                                  value = "search",
                                                  required = false
@@ -87,16 +90,17 @@ public class ProductController {
                                                  value = "pgsize"
                                          )
                                          int pgsize,
-                                         @RequestBody(required = false) ProductFilter filter) {
-        Map<String, Object> map = new HashMap<>();
-        SearchResponse<SearchableProduct> prod = productService.getProducts(q, filter, PageRequest.of(pg, pgsize));
-        map.put("product", prod.hits().hits().stream().map(Hit::source).toList());
-        map.put("filters", prod.aggregations().entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey,
-                o -> o.getValue().sterms().buckets().array().stream().collect(Collectors.toMap(StringTermsBucket::key,
-                        StringTermsBucket::docCount)))));
-        assert prod.hits().total() != null;
-        map.put("totalItems", prod.hits().total().value());
-        return new ResponseEntity<>(map,
+                                         @RequestBody(required = false) ProductFilter filter, @RequestHeader(
+                    name = HttpHeaders.AUTHORIZATION,
+                    required = false
+            ) String token) {
+        long phone = -1;
+        if (token != null) {
+            phone = Utils.decodePhoneFromJWT(token);
+        }
+        SearchResult prod = productService.getProducts(q, filter, PageRequest.of(pg, pgsize),
+                phone);
+        return new ResponseEntity<>(prod,
                 HttpStatus.OK);
     }
 

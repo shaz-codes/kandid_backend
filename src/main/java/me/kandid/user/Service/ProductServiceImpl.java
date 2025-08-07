@@ -9,10 +9,8 @@ import me.kandid.user.Model.Product.ProductVariant;
 import me.kandid.user.Model.Product.Types.Product;
 import me.kandid.user.Model.Product.Types.SearchableProduct;
 import me.kandid.user.Model.Requests.OrderRequest;
-import me.kandid.user.Repository.Customer.CustomerAddressRepository;
-import me.kandid.user.Repository.Customer.CustomerCartRepository;
-import me.kandid.user.Repository.Customer.CustomerOrdersRepository;
-import me.kandid.user.Repository.Customer.CustomerRepository;
+import me.kandid.user.Model.Responses.SearchResult;
+import me.kandid.user.Repository.Customer.*;
 import me.kandid.user.Repository.ProductRepository;
 import me.kandid.user.Repository.ProductVariantRepository;
 import me.kandid.user.Utils.Utils;
@@ -20,6 +18,7 @@ import okhttp3.*;
 import org.opensearch.client.opensearch.OpenSearchClient;
 import org.opensearch.client.opensearch._types.FieldValue;
 import org.opensearch.client.opensearch._types.aggregations.Aggregation;
+import org.opensearch.client.opensearch._types.aggregations.StringTermsBucket;
 import org.opensearch.client.opensearch._types.aggregations.TermsAggregation;
 import org.opensearch.client.opensearch.core.SearchRequest;
 import org.opensearch.client.opensearch.core.SearchResponse;
@@ -77,9 +76,11 @@ public class ProductServiceImpl implements ProductService {
     @Autowired
     CustomerAddressRepository customerAddressRepository;
 
+    @Autowired
+    CustomerWishlistRepository customerWishlistRepository;
+
     @Override
-    public Product getProduct(String code) {
-//        TODO: Implement discounts
+    public Product getProduct(String code, long phone) {
         System.out.println(code.split("-")[0]);
         List<Product> products = productRepository.getProductsByCodeContainingAndActive(code.split("-")[0], true);
         if (products.isEmpty()) {
@@ -89,11 +90,14 @@ public class ProductServiceImpl implements ProductService {
                                   .orElse(products.getFirst());
         product.setColors(
                 products.stream().map(p -> new Product.Colors(p.getCode(), p.getColor(), p.getColorCode())).toList());
+        if (phone > 0) {
+            product.setInWishlist(customerWishlistRepository.isProductInWishlist(phone, code) == 1);
+        }
         return product;
     }
 
     @Override
-    public SearchResponse<SearchableProduct> getProducts(String s, ProductFilter filter, Pageable pageable) {
+    public SearchResult getProducts(String s, ProductFilter filter, Pageable pageable, long phone) {
         List<String> fields = new ArrayList<>();
         Field[] f = SearchableProduct.class.getDeclaredFields();
         for (Field field : f) {
@@ -106,6 +110,7 @@ public class ProductServiceImpl implements ProductService {
         fields.remove("available");
         fields.remove("sellingPrice");
         fields.remove("mrp");
+        fields.remove("inWishlist");
 
         String indexName = "products";
         try {
@@ -144,8 +149,20 @@ public class ProductServiceImpl implements ProductService {
                                                                                                              ".keyword"))))))))
                                                .build();
             SearchResponse<SearchableProduct> p = openSearchClient.search(searchRequest, SearchableProduct.class);
-            System.out.println(p.hits().hits().stream().map(Hit::score).toList());
-            return p;
+            SearchResult sr = new SearchResult();
+            List<SearchableProduct> products = p.hits().hits().stream().map(Hit::source).toList();
+            if (phone > 0) {
+                products = products.stream().peek(t -> t.setInWishlist(
+                        customerWishlistRepository.isProductInWishlist(phone, t.getCode()) == 1)).toList();
+            }
+            sr.setProducts(products);
+            sr.setFilters(p.aggregations().entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey,
+                    o -> o.getValue().sterms().buckets().array().stream()
+                          .collect(Collectors.toMap(StringTermsBucket::key,
+                                  StringTermsBucket::docCount)))));
+            assert p.hits().total() != null;
+            sr.setTotal(p.hits().total().value());
+            return sr;
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -154,6 +171,7 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public SearchResponse<SearchableProduct> autocomplete(String a) {
         String indexName = "products";
+//        TODO: boost wishlisted items
         try {
             SearchRequest searchRequest =
                     new SearchRequest.Builder().index(indexName)
@@ -202,6 +220,7 @@ public class ProductServiceImpl implements ProductService {
         customerOrder.setBillAmount(bill);
         customerOrder.setItems(orderItems);
         customerOrder.setStatus("PENDING");
+        customerOrder.setPaymentStatus("PENDING");
 
         // Prepare PayU payment parameters
         String txnId = "ORD" + orderId;
@@ -237,7 +256,6 @@ public class ProductServiceImpl implements ProductService {
             URL paymentUrl = URI.create(Objects.requireNonNull(response.header("Location"))).toURL();
             customerOrder.setPaymentLink(paymentUrl);
 
-            productVariantRepository.save(variants.getFirst());
             customerOrdersRepository.save(customerOrder);
             return paymentUrl;
         }
@@ -252,6 +270,8 @@ public class ProductServiceImpl implements ProductService {
         String firstName = getFirstName(customer.getName());
         String lastName = getLastName(customer.getName());
         String amount = String.valueOf(bill); // Consider using actual `bill` if dynamic pricing
+
+        customerOrder.setPaymentStatus("PENDING");
         Map<String, String> params = Utils.createHashMap(
                 merchantKey, amount, firstName, customer.getEmail(),
                 String.valueOf(customer.getPhone()), "Payment for try and buy on Kandid",
@@ -308,13 +328,18 @@ public class ProductServiceImpl implements ProductService {
 
         if (orderRequest.getOrderType() == OrderTypes.REGULAR) {
             customerOrder.setStatus("PLACED");
+            customerOrder.setPaymentStatus("NOT_ATTEMPTED");
+
             productVariantRepository.save(variants.getFirst());
             customerOrdersRepository.save(customerOrder);
-            return null; // or return a confirmation message/URL if needed
+            return URI.create("http://localhost:3000/profile/orders/details/" + customerOrder.getId() +
+                    "?status=success").toURL(); //
         }
 
 // Payment flow for non-REGULAR order types
-        customerOrder.setStatus("PAYMENT_PENDING");
+        customerOrder.setStatus("PENDING");
+        customerOrder.setPaymentStatus("PENDING");
+
 
         String txnId = "ORD" + orderId;
         String firstName = getFirstName(customer.getName());

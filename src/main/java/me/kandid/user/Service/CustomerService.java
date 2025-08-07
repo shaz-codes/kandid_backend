@@ -34,9 +34,9 @@ public interface CustomerService {
 
     void createCustomerWishlist(long customerPhone);
 
-    CustomerWishlist addToCustomerWishlist(long customerPhone, String productCode);
+    void addToCustomerWishlist(long customerPhone, String productCode);
 
-    CustomerWishlist removeFromCustomerWishlist(long customerPhone, String productCode);
+    void removeFromCustomerWishlist(long customerPhone, String productCode);
 
     List<CustomerOrder> getAllCustomerOrders(long customerPhone);
 

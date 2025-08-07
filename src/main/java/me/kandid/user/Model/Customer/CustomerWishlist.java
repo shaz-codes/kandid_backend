@@ -1,14 +1,11 @@
 package me.kandid.user.Model.Customer;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinTable;
-import jakarta.persistence.ManyToMany;
+import jakarta.persistence.*;
 import lombok.Data;
 import me.kandid.user.Model.Product.Types.Product;
 
-import java.util.List;
+import java.util.Set;
 
 @Data
 @Entity
@@ -25,10 +22,20 @@ public class CustomerWishlist {
     )
     private long customerPhone;
     @ManyToMany
-    @JoinTable(name = "wishlist_product")
+    @JoinTable(
+            name = "wishlist_product",
+            joinColumns = @JoinColumn(
+                    name = "phone",
+                    referencedColumnName = "customerPhone"
+            ),
+            inverseJoinColumns = @JoinColumn(
+                    name = "product_code",
+                    referencedColumnName = "code"
+            )
+    )
     @Schema(
             title = "Products",
             description = "List of products in the customer's wishlist"
     )
-    private List<Product> products;
+    private Set<Product> products;
 }
