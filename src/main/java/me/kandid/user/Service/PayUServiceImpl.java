@@ -2,9 +2,11 @@ package me.kandid.user.Service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import me.kandid.user.Model.Customer.CustomerOrder;
+import me.kandid.user.Model.Product.ProductVariant;
 import me.kandid.user.Model.Responses.PayUTransactionDetailsResponse;
 import me.kandid.user.Model.Responses.PayUVerifyResponse;
 import me.kandid.user.Repository.Customer.CustomerOrdersRepository;
+import me.kandid.user.Repository.ProductVariantRepository;
 import me.kandid.user.Utils.Utils;
 import okhttp3.*;
 import org.slf4j.Logger;
@@ -35,6 +37,9 @@ public class PayUServiceImpl implements PayUService {
 
     @Autowired
     CustomerOrdersRepository customerOrdersRepository;
+
+    @Autowired
+    ProductVariantRepository productVariantRepository;
 
     @Override
     public URL success(String s) throws IOException {
@@ -84,6 +89,11 @@ public class PayUServiceImpl implements PayUService {
                             Long.parseLong(deets.getTxnid().replace("ORD", "")));
                     order.setPaymentStatus(deets.getStatus());
                     order.setPaymentLink(null);
+                    order.getItems().forEach(item -> {
+                        ProductVariant v = productVariantRepository.findBySku(item.getSku());
+                        v.setAvailableStock(v.getAvailableStock() + item.getQuantity());
+                        productVariantRepository.save(v);
+                    });
                     order.setStatus("FAILED");
                     customerOrdersRepository.save(order);
                     return URI.create("http://localhost:3000/profile/orders/details/" + deets
@@ -134,6 +144,11 @@ public class PayUServiceImpl implements PayUService {
                 order.setPaymentStatus(deets.getStatus());
                 order.setPaymentLink(null);
                 order.setStatus("FAILED");
+                order.getItems().forEach(item -> {
+                    ProductVariant v = productVariantRepository.findBySku(item.getSku());
+                    v.setAvailableStock(v.getAvailableStock() + item.getQuantity());
+                    productVariantRepository.save(v);
+                });
                 customerOrdersRepository.save(order);
                 return URI.create("http://localhost:3000/profile/orders/details/" + deets
                         .getTxnid() +
