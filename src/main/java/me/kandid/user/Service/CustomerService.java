@@ -1,6 +1,10 @@
 package me.kandid.user.Service;
 
-import me.kandid.user.Model.Customer.*;
+import me.kandid.user.Model.Customer.Customer;
+import me.kandid.user.Model.Customer.CustomerAddress;
+import me.kandid.user.Model.Customer.CustomerOrder;
+import me.kandid.user.Model.Customer.CustomerWishlist;
+import me.kandid.user.Model.Product.Types.CartProduct;
 
 import java.io.IOException;
 import java.util.List;
@@ -42,11 +46,11 @@ public interface CustomerService {
 
     CustomerOrder getCustomerOrderById(long id, long customerPhone);
 
-    List<CartItems> getCustomerCart(long customerPhone);
+    List<CartProduct> getCustomerCart(long customerPhone);
 
-    List<CartItems> addToCustomerCart(long customerPhone, CartItems cartItem);
+    List<CartProduct> addToCustomerCart(long customerPhone, CartProduct cartItem);
 
-    List<CartItems> editCustomerCart(long customerPhone, CartItems cartItem);
+    List<CartProduct> editCustomerCart(long customerPhone, CartProduct cartItem);
 
-    List<CartItems> removeFromCustomerCart(long customerPhone, CartItems cartItem);
+    List<CartProduct> removeFromCustomerCart(long customerPhone, CartProduct cartItem);
 }

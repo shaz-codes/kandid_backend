@@ -2,10 +2,14 @@ package me.kandid.user.Service;
 
 import me.kandid.user.Exceptions.ProductNotFound;
 import me.kandid.user.Exceptions.ProductNotInStock;
-import me.kandid.user.Model.Customer.*;
+import me.kandid.user.Model.Customer.Customer;
+import me.kandid.user.Model.Customer.CustomerAddress;
+import me.kandid.user.Model.Customer.CustomerOrder;
 import me.kandid.user.Model.Enums.OrderTypes;
 import me.kandid.user.Model.Product.ProductFilter;
 import me.kandid.user.Model.Product.ProductVariant;
+import me.kandid.user.Model.Product.Types.CartProduct;
+import me.kandid.user.Model.Product.Types.OrderProduct;
 import me.kandid.user.Model.Product.Types.Product;
 import me.kandid.user.Model.Product.Types.SearchableProduct;
 import me.kandid.user.Model.Requests.OrderRequest;
@@ -215,10 +219,10 @@ public class ProductServiceImpl implements ProductService {
         customerOrder.setCustomerAddress(address);
 
         List<ProductVariant> variants = new ArrayList<>();
-        List<OrderItem> orderItems = prepareOrderItems(orderRequest, String.valueOf(customerPhone), variants);
-        double bill = calculateBill(orderItems);
+        List<OrderProduct> orderProducts = prepareOrderItems(orderRequest, String.valueOf(customerPhone), variants);
+        double bill = calculateBill(orderProducts);
         customerOrder.setBillAmount(bill);
-        customerOrder.setItems(orderItems);
+        customerOrder.setItems(orderProducts);
         customerOrder.setStatus("PENDING");
         customerOrder.setPaymentStatus("PENDING");
 
@@ -321,10 +325,10 @@ public class ProductServiceImpl implements ProductService {
         customerOrder.setCustomerAddress(address);
 
         List<ProductVariant> variants = new ArrayList<>();
-        List<OrderItem> orderItems = prepareOrderItems(orderRequest, String.valueOf(customerPhone), variants);
-        double bill = calculateBill(orderItems);
+        List<OrderProduct> orderProducts = prepareOrderItems(orderRequest, String.valueOf(customerPhone), variants);
+        double bill = calculateBill(orderProducts);
         customerOrder.setBillAmount(bill);
-        customerOrder.setItems(orderItems);
+        customerOrder.setItems(orderProducts);
 
         if (orderRequest.getOrderType() == OrderTypes.REGULAR) {
             customerOrder.setStatus("PLACED");
@@ -382,7 +386,8 @@ public class ProductServiceImpl implements ProductService {
 
 //    Helper functions
 
-    private void processOrder(int quantity, List<ProductVariant> variants, List<OrderItem> orderItems, String sku) {
+    private void processOrder(int quantity, List<ProductVariant> variants, List<OrderProduct> orderProducts,
+                              String sku) {
         ProductVariant variant = productVariantRepository.findBySku(sku);
         if (variant == null) {
             throw new ProductNotFound(sku);
@@ -392,8 +397,8 @@ public class ProductServiceImpl implements ProductService {
         }
         variant.setAvailableStock(variant.getAvailableStock() - quantity);
         Product p = productRepository.getProductByCode(variant.getProductCode());
-        OrderItem orderItem = OrderItem.fromProduct(p, variant.getSku(), quantity);
-        orderItems.add(orderItem);
+        OrderProduct orderProduct = OrderProduct.fromProduct(p, variant.getSku(), quantity);
+        orderProducts.add(orderProduct);
         variants.add(variant);
     }
 
@@ -403,21 +408,21 @@ public class ProductServiceImpl implements ProductService {
         if (request.getBuynow() == null) throw new RuntimeException("BuyNow is null");
     }
 
-    private List<OrderItem> prepareOrderItems(OrderRequest request, String phone, List<ProductVariant> variants) {
-        List<OrderItem> items = new ArrayList<>();
+    private List<OrderProduct> prepareOrderItems(OrderRequest request, String phone, List<ProductVariant> variants) {
+        List<OrderProduct> items = new ArrayList<>();
         if (Boolean.TRUE.equals(request.getBuynow())) {
             processOrder(request.getQuantity(), variants, items, request.getSku());
         } else {
-            List<CartItems> cartItems = customerCartRepository.findAllByCustomerPhone(Long.parseLong(phone));
+            List<CartProduct> cartItems = customerCartRepository.findAllByCustomerPhone(Long.parseLong(phone));
             if (cartItems.isEmpty()) throw new RuntimeException("Cart is empty");
-            for (CartItems item : cartItems) {
-                processOrder(item.getQuantity(), variants, items, item.getProductSku());
+            for (CartProduct item : cartItems) {
+                processOrder(item.getQuantity(), variants, items, item.getSku());
             }
         }
         return items;
     }
 
-    private double calculateBill(List<OrderItem> items) {
+    private double calculateBill(List<OrderProduct> items) {
         double bill = items.stream().mapToDouble(i -> i.getPricePaid() * i.getQuantity()).sum();
         return bill <= 0 ? 100 : bill;
     }
