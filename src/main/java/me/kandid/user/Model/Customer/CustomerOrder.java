@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.Data;
 import me.kandid.user.Model.Employee.DeliveryPartner;
 import me.kandid.user.Model.Enums.OrderTypes;
+import me.kandid.user.Model.Product.Types.OrderProduct;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -73,7 +74,7 @@ public class CustomerOrder {
             title = "Items",
             description = "List of items in the order"
     )
-    private List<OrderItem> items;
+    private List<OrderProduct> items;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "delivery_partner")

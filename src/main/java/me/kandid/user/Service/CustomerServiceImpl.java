@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import me.kandid.user.Exceptions.ProductNotFound;
 import me.kandid.user.Model.Customer.*;
 import me.kandid.user.Model.MessageCentral.Response;
+import me.kandid.user.Model.Product.Types.CartProduct;
 import me.kandid.user.Model.Product.Types.Product;
 import me.kandid.user.Repository.Customer.*;
 import me.kandid.user.Repository.ProductRepository;
@@ -205,34 +206,46 @@ public class CustomerServiceImpl implements CustomerService {
     }
 
     @Override
-    public List<CartItems> getCustomerCart(long customerPhone) {
-        return customerCartRepository.findAllByCustomerPhone(customerPhone);
+    public List<CartProduct> getCustomerCart(long customerPhone) {
+        return customerCartRepository.findAllByCustomerPhone(customerPhone).stream()
+                                     .map(i -> CartProduct.fromProduct(
+                                             productRepository.getProductByCode(i.getProductCode()), i.getSku(),
+                                             i.getQuantity())).toList();
     }
 
     @Override
-    public List<CartItems> addToCustomerCart(long customerPhone, CartItems cartItem) {
+    public List<CartProduct> addToCustomerCart(long customerPhone, CartProduct cartItem) {
         cartItem.setCustomerPhone(customerPhone);
-        if (productVariantRepository.findBySku(cartItem.getProductSku()) == null)
-            throw new ProductNotFound(cartItem.getProductSku());
+        if (productVariantRepository.findBySku(cartItem.getSku()) == null)
+            throw new ProductNotFound(cartItem.getSku());
         customerCartRepository.save(cartItem);
-        return customerCartRepository.findAllByCustomerPhone(customerPhone);
+        return customerCartRepository.findAllByCustomerPhone(customerPhone).stream()
+                                     .map(i -> CartProduct.fromProduct(
+                                             productRepository.getProductByCode(i.getProductCode()), i.getSku(),
+                                             i.getQuantity())).toList();
     }
 
     @Override
-    public List<CartItems> editCustomerCart(long customerPhone, CartItems cartItem) {
+    public List<CartProduct> editCustomerCart(long customerPhone, CartProduct cartItem) {
         cartItem.setCustomerPhone(customerPhone);
-        if (productVariantRepository.findBySku(cartItem.getProductSku()) == null)
-            throw new ProductNotFound(cartItem.getProductSku());
+        if (productVariantRepository.findBySku(cartItem.getSku()) == null)
+            throw new ProductNotFound(cartItem.getSku());
         if (cartItem.getQuantity() == 0) customerCartRepository.delete(cartItem);
         else customerCartRepository.save(cartItem);
-        return customerCartRepository.findAllByCustomerPhone(customerPhone);
+        return customerCartRepository.findAllByCustomerPhone(customerPhone).stream()
+                                     .map(i -> CartProduct.fromProduct(
+                                             productRepository.getProductByCode(i.getProductCode()), i.getSku(),
+                                             i.getQuantity())).toList();
     }
 
     @Override
-    public List<CartItems> removeFromCustomerCart(long customerPhone, CartItems cartItem) {
+    public List<CartProduct> removeFromCustomerCart(long customerPhone, CartProduct cartItem) {
         cartItem.setCustomerPhone(customerPhone);
         customerCartRepository.delete(cartItem);
-        return customerCartRepository.findAllByCustomerPhone(customerPhone);
+        return customerCartRepository.findAllByCustomerPhone(customerPhone).stream()
+                                     .map(i -> CartProduct.fromProduct(
+                                             productRepository.getProductByCode(i.getProductCode()), i.getSku(),
+                                             i.getQuantity())).toList();
     }
 
 }

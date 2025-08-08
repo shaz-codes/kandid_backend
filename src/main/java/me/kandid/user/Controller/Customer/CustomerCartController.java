@@ -7,7 +7,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import me.kandid.user.Model.Customer.CartItems;
+import me.kandid.user.Model.Product.Types.CartProduct;
 import me.kandid.user.Service.CustomerService;
 import me.kandid.user.Utils.Utils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,7 +40,7 @@ public class CustomerCartController {
                             description = "Cart items retrieved successfully",
                             content = @Content(
                                     mediaType = "application/json",
-                                    schema = @Schema(implementation = CartItems.class)
+                                    schema = @Schema(implementation = CartProduct.class)
                             )
                     ),
                     @ApiResponse(
@@ -53,9 +53,9 @@ public class CustomerCartController {
                     ),
             }
     )
-    public ResponseEntity<List<CartItems>> getCart(@RequestHeader(name = "Authorization") String token) {
+    public ResponseEntity<List<CartProduct>> getCart(@RequestHeader(name = "Authorization") String token) {
         long phone = Utils.decodePhoneFromJWT(token);
-        List<CartItems> cart = customerService.getCustomerCart(phone);
+        List<CartProduct> cart = customerService.getCustomerCart(phone);
         if (cart.isEmpty()) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
@@ -74,15 +74,15 @@ public class CustomerCartController {
                             description = "Items added to cart successfully",
                             content = @Content(
                                     mediaType = "application/json",
-                                    array = @ArraySchema(arraySchema = @Schema(implementation = CartItems.class))
+                                    array = @ArraySchema(arraySchema = @Schema(implementation = CartProduct.class))
                             )
                     ),
             }
     )
-    public ResponseEntity<List<CartItems>> addToCart(@RequestHeader(name = "Authorization") String token,
-                                                     @RequestBody CartItems cartItems) {
+    public ResponseEntity<List<CartProduct>> addToCart(@RequestHeader(name = "Authorization") String token,
+                                                       @RequestBody CartProduct cartProduct) {
         long phone = Utils.decodePhoneFromJWT(token);
-        return new ResponseEntity<>(customerService.addToCustomerCart(phone, cartItems), HttpStatus.OK);
+        return new ResponseEntity<>(customerService.addToCustomerCart(phone, cartProduct), HttpStatus.OK);
     }
 
     @PutMapping("/edit")
@@ -97,15 +97,15 @@ public class CustomerCartController {
                             description = "Updated cart successfully",
                             content = @Content(
                                     mediaType = "application/json",
-                                    array = @ArraySchema(arraySchema = @Schema(implementation = CartItems.class))
+                                    array = @ArraySchema(arraySchema = @Schema(implementation = CartProduct.class))
                             )
                     ),
             }
     )
-    public ResponseEntity<List<CartItems>> editCart(@RequestHeader(name = "Authorization") String token,
-                                                    @RequestBody CartItems cartItems) {
+    public ResponseEntity<List<CartProduct>> editCart(@RequestHeader(name = "Authorization") String token,
+                                                      @RequestBody CartProduct cartProduct) {
         long phone = Utils.decodePhoneFromJWT(token);
-        return new ResponseEntity<>(customerService.editCustomerCart(phone, cartItems), HttpStatus.OK);
+        return new ResponseEntity<>(customerService.editCustomerCart(phone, cartProduct), HttpStatus.OK);
     }
 
     @DeleteMapping("remove")
@@ -120,14 +120,14 @@ public class CustomerCartController {
                             description = "Items removed from cart successfully",
                             content = @Content(
                                     mediaType = "application/json",
-                                    array = @ArraySchema(arraySchema = @Schema(implementation = CartItems.class))
+                                    array = @ArraySchema(arraySchema = @Schema(implementation = CartProduct.class))
                             )
                     ),
             }
     )
-    public ResponseEntity<List<CartItems>> removeFromCart(@RequestHeader(name = "Authorization") String token,
-                                                          @RequestBody CartItems cartItems) {
+    public ResponseEntity<List<CartProduct>> removeFromCart(@RequestHeader(name = "Authorization") String token,
+                                                            @RequestBody CartProduct cartProduct) {
         long phone = Utils.decodePhoneFromJWT(token);
-        return new ResponseEntity<>(customerService.removeFromCustomerCart(phone, cartItems), HttpStatus.OK);
+        return new ResponseEntity<>(customerService.removeFromCustomerCart(phone, cartProduct), HttpStatus.OK);
     }
 }
