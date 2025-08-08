@@ -387,7 +387,7 @@ public class ProductServiceImpl implements ProductService {
         if (variant == null) {
             throw new ProductNotFound(sku);
         }
-        if (variant.getAvailableStock() - quantity <= 0) {
+        if (variant.getAvailableStock() - quantity < 0) {
             throw new ProductNotInStock(sku);
         }
         variant.setAvailableStock(variant.getAvailableStock() - quantity);
