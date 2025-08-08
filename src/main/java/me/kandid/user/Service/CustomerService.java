@@ -32,7 +32,7 @@ public interface CustomerService {
 
     CustomerWishlist getCustomerWishlist(long customerPhone);
 
-    void createCustomerWishlist(long customerPhone);
+    CustomerWishlist createCustomerWishlist(long customerPhone);
 
     void addToCustomerWishlist(long customerPhone, String productCode);
 

@@ -2,12 +2,12 @@ package me.kandid.user.Service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import me.kandid.user.Exceptions.ProductNotFound;
-import me.kandid.user.Exceptions.WishlistDoesNotExist;
 import me.kandid.user.Model.Customer.*;
 import me.kandid.user.Model.MessageCentral.Response;
 import me.kandid.user.Model.Product.Types.Product;
 import me.kandid.user.Repository.Customer.*;
 import me.kandid.user.Repository.ProductRepository;
+import me.kandid.user.Repository.ProductVariantRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -43,6 +43,9 @@ public class CustomerServiceImpl implements CustomerService {
 
     @Autowired
     private OtpLoginRepository otpLoginRepository;
+
+    @Autowired
+    private ProductVariantRepository productVariantRepository;
 
 
     @Override
@@ -151,7 +154,7 @@ public class CustomerServiceImpl implements CustomerService {
     public CustomerWishlist getCustomerWishlist(long customerPhone) {
         CustomerWishlist w = customerWishlistRepository.getByCustomerPhone(customerPhone);
         if (w == null) {
-            throw new WishlistDoesNotExist(customerPhone);
+            w = createCustomerWishlist(customerPhone);
         }
         w.setProducts(w.getProducts().stream()
                        .peek(p -> p.setInWishlist(
@@ -162,20 +165,23 @@ public class CustomerServiceImpl implements CustomerService {
     }
 
     @Override
-    public void createCustomerWishlist(long customerPhone) {
+    public CustomerWishlist createCustomerWishlist(long customerPhone) {
         CustomerWishlist customerWishlist = new CustomerWishlist();
         customerWishlist.setCustomerPhone(customerPhone);
-        customerWishlistRepository.save(customerWishlist);
+        return customerWishlistRepository.save(customerWishlist);
     }
 
     @Override
     public void addToCustomerWishlist(long customerPhone, String productCode) {
-        CustomerWishlist customerWishlist = customerWishlistRepository.getByCustomerPhone(customerPhone);
-        Set<Product> products = customerWishlist.getProducts();
+        CustomerWishlist w = customerWishlistRepository.getByCustomerPhone(customerPhone);
+        if (w == null) {
+            w = createCustomerWishlist(customerPhone);
+        }
+        Set<Product> products = w.getProducts();
         Product p = productRepository.getProductByCode(productCode);
         if (p == null) throw new ProductNotFound(productCode);
         products.add(p);
-        customerWishlistRepository.save(customerWishlist);
+        customerWishlistRepository.save(w);
     }
 
     @Override
@@ -206,6 +212,8 @@ public class CustomerServiceImpl implements CustomerService {
     @Override
     public List<CartItems> addToCustomerCart(long customerPhone, CartItems cartItem) {
         cartItem.setCustomerPhone(customerPhone);
+        if (productVariantRepository.findBySku(cartItem.getProductSku()) == null)
+            throw new ProductNotFound(cartItem.getProductSku());
         customerCartRepository.save(cartItem);
         return customerCartRepository.findAllByCustomerPhone(customerPhone);
     }
@@ -213,7 +221,10 @@ public class CustomerServiceImpl implements CustomerService {
     @Override
     public List<CartItems> editCustomerCart(long customerPhone, CartItems cartItem) {
         cartItem.setCustomerPhone(customerPhone);
-        customerCartRepository.save(cartItem);
+        if (productVariantRepository.findBySku(cartItem.getProductSku()) == null)
+            throw new ProductNotFound(cartItem.getProductSku());
+        if (cartItem.getQuantity() == 0) customerCartRepository.delete(cartItem);
+        else customerCartRepository.save(cartItem);
         return customerCartRepository.findAllByCustomerPhone(customerPhone);
     }
 
