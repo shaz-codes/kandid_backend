@@ -56,7 +56,7 @@ public class CustomerProfileController {
 
         Customer customer = customerService.getCustomer(Utils.decodePhoneFromJWT(token));
         if (customer == null) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            return ResponseEntity.status(HttpStatus.FOUND).build();
         }
         return new ResponseEntity<>(customer, HttpStatus.OK);
     }
