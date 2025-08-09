@@ -209,7 +209,9 @@ public class CustomerServiceImpl implements CustomerService {
     public List<CartProduct> getCustomerCart(long customerPhone) {
         return customerCartRepository.findAllByCustomerPhone(customerPhone).stream()
                                      .map(i -> CartProduct.fromProduct(
-                                             productRepository.getProductByCode(i.getProductCode()), i.getSku(),
+                                             productRepository.getProductByCode(
+                                                     i.getSku().substring(0, i.getSku().lastIndexOf('-'))),
+                                             i.getSku(),
                                              i.getQuantity())).toList();
     }
 
@@ -221,7 +223,9 @@ public class CustomerServiceImpl implements CustomerService {
         customerCartRepository.save(cartItem);
         return customerCartRepository.findAllByCustomerPhone(customerPhone).stream()
                                      .map(i -> CartProduct.fromProduct(
-                                             productRepository.getProductByCode(i.getProductCode()), i.getSku(),
+                                             productRepository.getProductByCode(
+                                                     i.getSku().substring(0, i.getSku().lastIndexOf('-'))),
+                                             i.getSku(),
                                              i.getQuantity())).toList();
     }
 
@@ -234,7 +238,9 @@ public class CustomerServiceImpl implements CustomerService {
         else customerCartRepository.save(cartItem);
         return customerCartRepository.findAllByCustomerPhone(customerPhone).stream()
                                      .map(i -> CartProduct.fromProduct(
-                                             productRepository.getProductByCode(i.getProductCode()), i.getSku(),
+                                             productRepository.getProductByCode(
+                                                     i.getSku().substring(0, i.getSku().lastIndexOf('-'))),
+                                             i.getSku(),
                                              i.getQuantity())).toList();
     }
 
@@ -244,7 +250,9 @@ public class CustomerServiceImpl implements CustomerService {
         customerCartRepository.delete(cartItem);
         return customerCartRepository.findAllByCustomerPhone(customerPhone).stream()
                                      .map(i -> CartProduct.fromProduct(
-                                             productRepository.getProductByCode(i.getProductCode()), i.getSku(),
+                                             productRepository.getProductByCode(
+                                                     i.getSku().substring(0, i.getSku().lastIndexOf('-'))),
+                                             i.getSku(),
                                              i.getQuantity())).toList();
     }
 
