@@ -31,6 +31,9 @@ public class CustomerOrder {
     )
     private long id;
 
+    public String getId() {
+        return "ORD" + this.id;
+    }
 
     @Column(nullable = false)
     @Schema(
