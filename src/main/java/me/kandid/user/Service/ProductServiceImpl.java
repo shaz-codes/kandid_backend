@@ -259,7 +259,8 @@ public class ProductServiceImpl implements ProductService {
 
             URL paymentUrl = URI.create(Objects.requireNonNull(response.header("Location"))).toURL();
             customerOrder.setPaymentLink(paymentUrl);
-
+            
+            customerCartRepository.deleteAllByCustomerPhone(customerPhone);
             customerOrdersRepository.save(customerOrder);
             return paymentUrl;
         }
@@ -279,7 +280,7 @@ public class ProductServiceImpl implements ProductService {
         Map<String, String> params = Utils.createHashMap(
                 merchantKey, amount, firstName, customer.getEmail(),
                 String.valueOf(customer.getPhone()), "Payment for try and buy on Kandid",
-                backendUrl + "success", backendUrl + "failure", "ORD" + customerOrder.getId()
+                backendUrl + "success", backendUrl + "failure", customerOrder.getId()
         );
 
         params.put("hash", Utils.generateHashPaymentsAPI(params, salt));
@@ -334,6 +335,7 @@ public class ProductServiceImpl implements ProductService {
             customerOrder.setStatus("PLACED");
             customerOrder.setPaymentStatus("NOT_ATTEMPTED");
 
+            customerCartRepository.deleteAllByCustomerPhone(customerPhone);
             productVariantRepository.save(variants.getFirst());
             customerOrdersRepository.save(customerOrder);
             return URI.create("http://localhost:3000/profile/orders/details/" + customerOrder.getId() +
@@ -377,6 +379,7 @@ public class ProductServiceImpl implements ProductService {
             URL paymentUrl = URI.create(Objects.requireNonNull(response.header("Location"))).toURL();
             customerOrder.setPaymentLink(paymentUrl);
 
+            customerCartRepository.deleteAllByCustomerPhone(customerPhone);
             productVariantRepository.save(variants.getFirst());
             customerOrdersRepository.save(customerOrder);
             return paymentUrl;
