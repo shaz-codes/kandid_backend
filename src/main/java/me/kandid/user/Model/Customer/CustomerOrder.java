@@ -31,9 +31,6 @@ public class CustomerOrder {
     )
     private long id;
 
-    public String getId() {
-        return "ORD" + id;
-    }
 
     @Column(nullable = false)
     @Schema(
@@ -76,7 +73,7 @@ public class CustomerOrder {
     )
     private List<OrderProduct> items;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "delivery_partner")
     @Schema(
             title = "Delivery Partner",
@@ -84,7 +81,7 @@ public class CustomerOrder {
     )
     private DeliveryPartner deliveryPartner;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "address")
     @Schema(
             title = "Customer Address",
