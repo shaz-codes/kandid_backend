@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.*;
 import java.io.IOException;
 import java.net.URL;
 import java.util.List;
+import java.util.Map;
 
 // TODO: Create order, return a order, generate payment link
 
@@ -124,7 +125,7 @@ public class CustomerOrdersController {
             IOException {
         long phone = Utils.decodePhoneFromJWT(token);
         URL url = productService.checkout_confirmed(phone, Long.parseLong(id.replace("ORD", "")));
-        return ResponseEntity.status(HttpStatus.FOUND).header("Location", url.toString()).build();
+        return ResponseEntity.status(HttpStatus.FOUND).body(Map.of("location", url.toString()));
     }
 
     @Operation(
@@ -144,7 +145,7 @@ public class CustomerOrdersController {
             throws Exception {
         long phone = Utils.decodePhoneFromJWT(token);
         URL url = productService.checkout_prepaid(phone, order);
-        return ResponseEntity.status(HttpStatus.FOUND).header("Location", url.toString()).build();
+        return ResponseEntity.status(HttpStatus.FOUND).body(Map.of("location", url.toString()));
     }
 
     @Operation(
@@ -164,7 +165,7 @@ public class CustomerOrdersController {
             throws Exception {
         long phone = Utils.decodePhoneFromJWT(token);
         URL url = productService.checkout_cod(phone, order);
-        return ResponseEntity.status(HttpStatus.FOUND).header("Location", url.toString()).build();
+        return ResponseEntity.status(HttpStatus.FOUND).body(Map.of("location", url.toString()));
     }
 
 

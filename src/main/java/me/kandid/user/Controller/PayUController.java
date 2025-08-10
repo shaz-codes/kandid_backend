@@ -39,7 +39,7 @@ public class PayUController {
     )
     @PostMapping("/success")
     public ResponseEntity<?> success(@RequestBody String s) throws IOException {
-        return ResponseEntity.status(HttpStatus.OK).header("Location", payUService.success(s).toString()).build();
+        return ResponseEntity.status(HttpStatus.FOUND).header("Location", payUService.success(s).toString()).build();
     }
 
     @Operation(
@@ -55,6 +55,6 @@ public class PayUController {
     )
     @PostMapping("/failure")
     public ResponseEntity<?> failure(@RequestBody String s) throws IOException {
-        return ResponseEntity.status(HttpStatus.OK).header("Location", payUService.failure(s).toString()).build();
+        return ResponseEntity.status(HttpStatus.FOUND).header("Location", payUService.failure(s).toString()).build();
     }
 }
