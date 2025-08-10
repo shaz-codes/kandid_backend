@@ -125,7 +125,7 @@ public class CustomerOrdersController {
             IOException {
         long phone = Utils.decodePhoneFromJWT(token);
         URL url = productService.checkout_confirmed(phone, Long.parseLong(id.replace("ORD", "")));
-        return ResponseEntity.status(HttpStatus.FOUND).body(Map.of("location", url.toString()));
+        return new ResponseEntity<>(Map.of("location", url.toString()), HttpStatus.FOUND);
     }
 
     @Operation(
@@ -145,7 +145,7 @@ public class CustomerOrdersController {
             throws Exception {
         long phone = Utils.decodePhoneFromJWT(token);
         URL url = productService.checkout_prepaid(phone, order);
-        return ResponseEntity.status(HttpStatus.FOUND).body(Map.of("location", url.toString()));
+        return new ResponseEntity<>(Map.of("location", url.toString()), HttpStatus.FOUND);
     }
 
     @Operation(
@@ -165,7 +165,7 @@ public class CustomerOrdersController {
             throws Exception {
         long phone = Utils.decodePhoneFromJWT(token);
         URL url = productService.checkout_cod(phone, order);
-        return ResponseEntity.status(HttpStatus.FOUND).body(Map.of("location", url.toString()));
+        return new ResponseEntity<>(Map.of("location", url.toString()), HttpStatus.FOUND);
     }
 
 
