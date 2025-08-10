@@ -1,5 +1,6 @@
 package me.kandid.user.Repository.Customer;
 
+import jakarta.transaction.Transactional;
 import me.kandid.user.Model.Product.Types.CartProduct;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -10,5 +11,6 @@ import java.util.List;
 public interface CustomerCartRepository extends JpaRepository<CartProduct, Long> {
     List<CartProduct> findAllByCustomerPhone(long customerPhone);
 
+    @Transactional
     void deleteAllByCustomerPhone(long customerPhone);
 }
