@@ -91,8 +91,9 @@ public class CartProduct {
     )
     private String color;
 
-    public static CartProduct fromProduct(Product product, String sku, int quantity) {
+    public static CartProduct fromProduct(Product product, String sku, int quantity, long id) {
         CartProduct item = new CartProduct();
+        item.id = id;
         item.sku = sku;
         item.productCode = product.getCode();
         item.name = product.getName();

@@ -212,12 +212,13 @@ public class CustomerServiceImpl implements CustomerService {
                                              productRepository.getProductByCode(
                                                      i.getSku().substring(0, i.getSku().lastIndexOf('-'))),
                                              i.getSku(),
-                                             i.getQuantity())).toList();
+                                             i.getQuantity(), i.getId())).toList();
     }
 
     @Override
     public List<CartProduct> addToCustomerCart(long customerPhone, CartProduct cartItem) {
         cartItem.setCustomerPhone(customerPhone);
+        System.out.println(customerPhone);
         if (productVariantRepository.findBySku(cartItem.getSku()) == null)
             throw new ProductNotFound(cartItem.getSku());
         customerCartRepository.save(cartItem);
@@ -226,7 +227,7 @@ public class CustomerServiceImpl implements CustomerService {
                                              productRepository.getProductByCode(
                                                      i.getSku().substring(0, i.getSku().lastIndexOf('-'))),
                                              i.getSku(),
-                                             i.getQuantity())).toList();
+                                             i.getQuantity(), i.getId())).toList();
     }
 
     @Override
@@ -241,19 +242,19 @@ public class CustomerServiceImpl implements CustomerService {
                                              productRepository.getProductByCode(
                                                      i.getSku().substring(0, i.getSku().lastIndexOf('-'))),
                                              i.getSku(),
-                                             i.getQuantity())).toList();
+                                             i.getQuantity(), i.getId())).toList();
     }
 
     @Override
     public List<CartProduct> removeFromCustomerCart(long customerPhone, CartProduct cartItem) {
-        cartItem.setCustomerPhone(customerPhone);
-        customerCartRepository.delete(cartItem);
+        System.out.println(customerPhone);
+        customerCartRepository.deleteById(cartItem.getId());
         return customerCartRepository.findAllByCustomerPhone(customerPhone).stream()
                                      .map(i -> CartProduct.fromProduct(
                                              productRepository.getProductByCode(
                                                      i.getSku().substring(0, i.getSku().lastIndexOf('-'))),
                                              i.getSku(),
-                                             i.getQuantity())).toList();
+                                             i.getQuantity(), i.getId())).toList();
     }
 
 }
