@@ -19,7 +19,7 @@ public class OrderProduct {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long itemId;
 
-    private boolean returned;
+    private int returned;
 
     private long orderId;
 
