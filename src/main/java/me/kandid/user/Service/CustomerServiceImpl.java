@@ -98,7 +98,6 @@ public class CustomerServiceImpl implements CustomerService {
         // " \"authToken\": null\n" +
         // " }\n" +
         // "}";
-        System.out.println(res.body() + "\n" + res.statusCode());
         ObjectMapper mapper = new ObjectMapper();
         Response re = mapper.readValue(res.body(), Response.class);
         if (res.statusCode() == 200) {
@@ -218,7 +217,6 @@ public class CustomerServiceImpl implements CustomerService {
     @Override
     public List<CartProduct> addToCustomerCart(long customerPhone, CartProduct cartItem) {
         cartItem.setCustomerPhone(customerPhone);
-        System.out.println(customerPhone);
         if (productVariantRepository.findBySku(cartItem.getSku()) == null)
             throw new ProductNotFound(cartItem.getSku());
         CartProduct existingCp = customerCartRepository.findCartProductByCustomerPhoneAndSku(customerPhone,
@@ -252,7 +250,6 @@ public class CustomerServiceImpl implements CustomerService {
 
     @Override
     public List<CartProduct> removeFromCustomerCart(long customerPhone, CartProduct cartItem) {
-        System.out.println(customerPhone);
         customerCartRepository.deleteById(cartItem.getId());
         return customerCartRepository.findAllByCustomerPhone(customerPhone).stream()
                                      .map(i -> CartProduct.fromProduct(

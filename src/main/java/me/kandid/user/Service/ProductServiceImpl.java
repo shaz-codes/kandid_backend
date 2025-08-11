@@ -41,7 +41,6 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public Product getProduct(String code, long phone) {
-        System.out.println(code.split("-")[0]);
         List<Product> products = productRepository.getProductsByCodeContainingAndActive(code.split("-")[0], true);
         if (products.isEmpty()) {
             throw new ProductNotFound(code);
@@ -109,7 +108,8 @@ public class ProductServiceImpl implements ProductService {
                                                                                                              ".keyword")))))))
                                                .sort(sort -> {
                                                    if (filter.getSortType() != null) {
-                                                       if (filter.getSortType().equals("ASC")) {
+                                                       System.out.println(filter.getSortType());
+                                                       if (filter.getSortType().equalsIgnoreCase("ASC")) {
                                                            return sort.field(
                                                                    a -> a.field("sellingPrice").order(SortOrder.Asc));
                                                        } else if (filter.getSortType().equals("DSC")) {

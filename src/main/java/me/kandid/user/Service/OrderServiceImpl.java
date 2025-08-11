@@ -88,7 +88,6 @@ public class OrderServiceImpl implements OrderService {
 
         List<ProductVariant> variants = new ArrayList<>();
         List<OrderProduct> orderProducts = prepareOrderItems(orderRequest, String.valueOf(customerPhone), variants);
-        System.out.println(orderProducts);
         double bill = calculateBill(orderProducts);
         customerOrder.setBillAmount(bill);
         customerOrder.setItems(orderProducts);

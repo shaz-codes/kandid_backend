@@ -111,7 +111,6 @@ public class PayUServiceImpl implements PayUService {
 
     @Override
     public URL failure(String s) throws IOException {
-        System.out.println(s);
 //        TODO: add items back to the inventory
         Map<String, String> params = Utils.decodeForm(s);
 
