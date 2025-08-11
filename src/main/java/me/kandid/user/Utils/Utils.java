@@ -194,7 +194,7 @@ public class Utils {
         return Query.of(
                 q -> q
                         .terms(
-                                t -> t.field(field)
+                                t -> t.field(field + ".keyword")
                                       .terms(
                                               tt -> tt
                                                       .value(list.stream().map(FieldValue::of).toList()
