@@ -31,7 +31,7 @@ public class CustomerOrder {
     )
     private long id;
 
-    public String getId() {
+    public String getIdInString() {
         return "ORD" + this.id;
     }
 
@@ -67,8 +67,12 @@ public class CustomerOrder {
 
     @OneToMany(
             fetch = FetchType.EAGER,
-            cascade = CascadeType.ALL,
-            mappedBy = "orderId"
+            cascade = CascadeType.ALL
+    )
+    @JoinTable(
+            name = "customer_orders_items",
+            joinColumns = @JoinColumn(name = "orderId"),
+            inverseJoinColumns = @JoinColumn(name = "productId")
     )
     @Schema(
             title = "Items",

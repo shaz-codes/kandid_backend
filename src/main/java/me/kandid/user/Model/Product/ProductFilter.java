@@ -125,4 +125,10 @@ public class ProductFilter {
             minimum = "0"
     )
     private Double priceTo;
+    
+    @Schema(
+            description = "Sort Type",
+            example = "ASC,DSC,REL"
+    )
+    private String sortType;
 }
