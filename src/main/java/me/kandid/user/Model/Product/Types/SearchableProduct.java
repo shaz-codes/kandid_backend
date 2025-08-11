@@ -19,6 +19,12 @@ public class SearchableProduct {
     )
     private String code;
 
+    @Schema(
+            description = "gender",
+            example = "MALE,FEMALE"
+    )
+    private String gender;
+
     @Transient
     private boolean inWishlist;
 

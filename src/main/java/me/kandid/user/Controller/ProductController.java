@@ -73,11 +73,17 @@ public class ProductController {
         return ResponseEntity.ok(product);
     }
 
+    @GetMapping("/categories")
+    public ResponseEntity<?> getCategories(@RequestParam String gender) {
+
+        return new ResponseEntity<>(productService.getAllCategoriesWithImages(gender), HttpStatus.OK);
+    }
+
 
     @Operation(
             summary = "Search with filters and paging"
     )
-    @PostMapping("")
+    @PostMapping()
     public ResponseEntity<?> getProducts(@RequestParam(
                                                  value = "search",
                                                  required = false
