@@ -221,6 +221,11 @@ public class CustomerServiceImpl implements CustomerService {
         System.out.println(customerPhone);
         if (productVariantRepository.findBySku(cartItem.getSku()) == null)
             throw new ProductNotFound(cartItem.getSku());
+        CartProduct existingCp = customerCartRepository.findCartProductByCustomerPhoneAndSku(customerPhone,
+                cartItem.getSku());
+        if (existingCp != null) {
+            cartItem.setId(existingCp.getId());
+        }
         customerCartRepository.save(cartItem);
         return customerCartRepository.findAllByCustomerPhone(customerPhone).stream()
                                      .map(i -> CartProduct.fromProduct(

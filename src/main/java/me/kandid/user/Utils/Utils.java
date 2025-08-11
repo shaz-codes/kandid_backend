@@ -5,6 +5,7 @@ import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import me.kandid.user.Model.Product.ProductFilter;
 import org.apache.commons.codec.digest.DigestUtils;
+import org.opensearch.client.json.JsonData;
 import org.opensearch.client.opensearch._types.FieldValue;
 import org.opensearch.client.opensearch._types.query_dsl.Query;
 
@@ -171,6 +172,16 @@ public class Utils {
         if (filter.getBrand() != null) {
             filters.add(createFieldQuery("brand", filter.getBrand()));
         }
+        if (filter.getPriceTo() != null) {
+            filters.add(Query.of(
+                    q -> q.range(r -> r.field("sellingPrice").lte(JsonData.of(filter.getPriceTo())))
+            ));
+        }
+        if (filter.getPriceFrom() != null) {
+            filters.add(Query.of(
+                    q -> q.range(r -> r.field("sellingPrice").gte(JsonData.of(filter.getPriceFrom())))
+            ));
+        }
         return filters;
     }
 
@@ -188,4 +199,6 @@ public class Utils {
                         )
         );
     }
+
+
 }

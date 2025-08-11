@@ -11,4 +11,6 @@ public interface CustomerAddressRepository extends JpaRepository<CustomerAddress
     CustomerAddress getCustomerAddressById(long id);
 
     List<CustomerAddress> getCustomerAddressesByCustomerPhone(long customerPhone);
+
+    CustomerAddress getCustomerAddressByIdAndCustomerPhone(long id, long customerPhone);
 }

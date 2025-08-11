@@ -21,8 +21,6 @@ public class OrderProduct {
 
     private int returned;
 
-    private long orderId;
-
     private String customerPhone;
 
     @Schema(

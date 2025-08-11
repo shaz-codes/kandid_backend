@@ -1,5 +1,6 @@
 package me.kandid.user.Service;
 
+import jakarta.transaction.Transactional;
 import me.kandid.user.Exceptions.ProductNotFound;
 import me.kandid.user.Exceptions.ProductNotInStock;
 import me.kandid.user.Model.Customer.Customer;
@@ -21,6 +22,7 @@ import me.kandid.user.Utils.Utils;
 import okhttp3.*;
 import org.opensearch.client.opensearch.OpenSearchClient;
 import org.opensearch.client.opensearch._types.FieldValue;
+import org.opensearch.client.opensearch._types.SortOrder;
 import org.opensearch.client.opensearch._types.aggregations.Aggregation;
 import org.opensearch.client.opensearch._types.aggregations.StringTermsBucket;
 import org.opensearch.client.opensearch._types.aggregations.TermsAggregation;
@@ -44,6 +46,7 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
+@Transactional
 public class ProductServiceImpl implements ProductService {
 
     @Value("${payu.merchantkey}")
@@ -151,6 +154,18 @@ public class ProductServiceImpl implements ProductService {
                                                                                              ta -> ta.field(
                                                                                                      v.concat(
                                                                                                              ".keyword"))))))))
+                                               .sort(sort -> {
+                                                   if (filter.getSortType() != null) {
+                                                       if (filter.getSortType().equals("ASC")) {
+                                                           return sort.field(
+                                                                   a -> a.field("sellingPrice").order(SortOrder.Asc));
+                                                       } else if (filter.getSortType().equals("DSC")) {
+                                                           return sort.field(
+                                                                   a -> a.field("sellingPrice").order(SortOrder.Desc));
+                                                       }
+                                                   }
+                                                   return null;
+                                               })
                                                .build();
             SearchResponse<SearchableProduct> p = openSearchClient.search(searchRequest, SearchableProduct.class);
             SearchResult sr = new SearchResult();
@@ -214,12 +229,15 @@ public class ProductServiceImpl implements ProductService {
         customerOrder.setCustomerPhone(customerPhone);
         customerOrder.setType(orderRequest.getOrderType());
 
-        CustomerAddress address = customerAddressRepository.getCustomerAddressById(orderRequest.getAddress().getId());
+        CustomerAddress address =
+                customerAddressRepository.getCustomerAddressByIdAndCustomerPhone(orderRequest.getAddress().getId(),
+                        customerPhone);
         if (address == null) throw new RuntimeException("Address ID not found");
         customerOrder.setCustomerAddress(address);
 
         List<ProductVariant> variants = new ArrayList<>();
         List<OrderProduct> orderProducts = prepareOrderItems(orderRequest, String.valueOf(customerPhone), variants);
+        System.out.println(orderProducts);
         double bill = calculateBill(orderProducts);
         customerOrder.setBillAmount(bill);
         customerOrder.setItems(orderProducts);
@@ -259,7 +277,7 @@ public class ProductServiceImpl implements ProductService {
 
             URL paymentUrl = URI.create(Objects.requireNonNull(response.header("Location"))).toURL();
             customerOrder.setPaymentLink(paymentUrl);
-            
+
             customerCartRepository.deleteAllByCustomerPhone(customerPhone);
             customerOrdersRepository.save(customerOrder);
             return paymentUrl;
@@ -280,7 +298,7 @@ public class ProductServiceImpl implements ProductService {
         Map<String, String> params = Utils.createHashMap(
                 merchantKey, amount, firstName, customer.getEmail(),
                 String.valueOf(customer.getPhone()), "Payment for try and buy on Kandid",
-                backendUrl + "success", backendUrl + "failure", customerOrder.getId()
+                backendUrl + "success", backendUrl + "failure", customerOrder.getIdInString()
         );
 
         params.put("hash", Utils.generateHashPaymentsAPI(params, salt));
@@ -321,7 +339,8 @@ public class ProductServiceImpl implements ProductService {
         customerOrder.setCustomerPhone(customerPhone);
         customerOrder.setType(orderRequest.getOrderType());
 
-        CustomerAddress address = customerAddressRepository.getCustomerAddressById(orderRequest.getAddress().getId());
+        CustomerAddress address = customerAddressRepository.getCustomerAddressByIdAndCustomerPhone(
+                orderRequest.getAddress().getId(), customerPhone);
         if (address == null) throw new RuntimeException("Address ID not found");
         customerOrder.setCustomerAddress(address);
 
@@ -338,7 +357,7 @@ public class ProductServiceImpl implements ProductService {
             customerCartRepository.deleteAllByCustomerPhone(customerPhone);
             productVariantRepository.save(variants.getFirst());
             customerOrdersRepository.save(customerOrder);
-            return URI.create("http://localhost:3000/profile/orders/details/" + customerOrder.getId() +
+            return URI.create("http://localhost:3000/profile/orders/details/" + customerOrder.getIdInString() +
                     "?status=success").toURL(); //
         }
 
