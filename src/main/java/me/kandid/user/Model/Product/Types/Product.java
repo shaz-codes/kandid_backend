@@ -26,6 +26,12 @@ public class Product {
     private boolean inWishlist;
 
     @Schema(
+            description = "gender",
+            example = "MALE,FEMALE"
+    )
+    private String gender;
+
+    @Schema(
             description = "Product name/title",
             example = "Cotton Casual Shirt"
     )

@@ -113,6 +113,12 @@ public class ProductFilter {
     private List<String> brand;
 
     @Schema(
+            description = "gender",
+            example = "MALE,FEMALE"
+    )
+    private List<String> gender;
+
+    @Schema(
             description = "Minimum price filter",
             example = "1999",
             minimum = "0"
@@ -125,7 +131,7 @@ public class ProductFilter {
             minimum = "0"
     )
     private Double priceTo;
-    
+
     @Schema(
             description = "Sort Type",
             example = "ASC,DSC,REL"

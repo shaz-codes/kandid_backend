@@ -11,6 +11,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import me.kandid.user.Model.Customer.CustomerOrder;
 import me.kandid.user.Model.Requests.OrderRequest;
 import me.kandid.user.Service.CustomerService;
+import me.kandid.user.Service.OrderService;
 import me.kandid.user.Service.ProductService;
 import me.kandid.user.Utils.Utils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,6 +39,9 @@ public class CustomerOrdersController {
 
     @Autowired
     private ProductService productService;
+
+    @Autowired
+    private OrderService orderService;
 
     @GetMapping("orders")
     @Operation(
@@ -124,7 +128,7 @@ public class CustomerOrdersController {
                                                 @PathVariable String id) throws
             IOException {
         long phone = Utils.decodePhoneFromJWT(token);
-        URL url = productService.checkout_confirmed(phone, Long.parseLong(id.replace("ORD", "")));
+        URL url = orderService.checkout_confirmed(phone, Long.parseLong(id.replace("ORD", "")));
         return new ResponseEntity<>(Map.of("location", url.toString()), HttpStatus.FOUND);
     }
 
@@ -144,7 +148,7 @@ public class CustomerOrdersController {
                                               @RequestHeader(name = "Authorization") String token)
             throws Exception {
         long phone = Utils.decodePhoneFromJWT(token);
-        URL url = productService.checkout_prepaid(phone, order);
+        URL url = orderService.checkout_prepaid(phone, order);
         return new ResponseEntity<>(Map.of("location", url.toString()), HttpStatus.FOUND);
     }
 
@@ -164,7 +168,7 @@ public class CustomerOrdersController {
                                           @RequestHeader(name = "Authorization") String token)
             throws Exception {
         long phone = Utils.decodePhoneFromJWT(token);
-        URL url = productService.checkout_cod(phone, order);
+        URL url = orderService.checkout_cod(phone, order);
         return new ResponseEntity<>(Map.of("location", url.toString()), HttpStatus.FOUND);
     }
 

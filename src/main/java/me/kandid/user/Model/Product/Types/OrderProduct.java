@@ -31,6 +31,12 @@ public class OrderProduct {
     private String sku;
 
     @Schema(
+            description = "gender",
+            example = "MALE,FEMALE"
+    )
+    private String gender;
+
+    @Schema(
             description = "Product Code for the product",
             example = "PROD001-WHITE"
     )
@@ -89,6 +95,7 @@ public class OrderProduct {
         orderProduct.description = product.getDescription();
         orderProduct.color = product.getColor();
         orderProduct.mrp = product.getMrp();
+        orderProduct.gender = product.getGender();
         orderProduct.visuals = product.getVisuals();
         orderProduct.brand = product.getBrand().getDisplayName();
         orderProduct.pricePaid = product.getSellingPrice();

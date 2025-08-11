@@ -172,6 +172,10 @@ public class Utils {
         if (filter.getBrand() != null) {
             filters.add(createFieldQuery("brand", filter.getBrand()));
         }
+        if (filter.getGender() != null) {
+            filters.add(createFieldQuery("gender", filter.getGender()));
+        }
+
         if (filter.getPriceTo() != null) {
             filters.add(Query.of(
                     q -> q.range(r -> r.field("sellingPrice").lte(JsonData.of(filter.getPriceTo())))
