@@ -74,7 +74,7 @@ public class ProductController {
     }
 
     @GetMapping("/categories")
-    public ResponseEntity<?> getCategories(@RequestParam String gender) {
+    public ResponseEntity<?> getCategories(@RequestParam(required = false) String gender) {
 
         return new ResponseEntity<>(productService.getAllCategoriesWithImages(gender), HttpStatus.OK);
     }
