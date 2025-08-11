@@ -174,7 +174,7 @@ public class ProductServiceImpl implements ProductService {
             SearchResponse<Void> response = openSearchClient.search(s -> s
                             .size(0)
                             .query(q -> q.bool(b -> {
-                                if (gender != null && !gender.trim().isEmpty()) {}
+                                if (gender != null && !gender.trim().isEmpty())
                                     return b.filter(f -> f.match(
                                             t -> t.field("gender.keyword").query(FieldValue.of(gender)).fuzziness(
                                                     "AUTO")));
