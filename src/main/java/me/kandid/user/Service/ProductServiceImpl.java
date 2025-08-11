@@ -162,7 +162,6 @@ public class ProductServiceImpl implements ProductService {
                                                .size(30)
                                                .build();
             SearchResponse<SearchableProduct> p = openSearchClient.search(searchRequest, SearchableProduct.class);
-            System.out.println(p.hits().hits().stream().map(Hit::score).toList());
             return p;
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -174,7 +173,13 @@ public class ProductServiceImpl implements ProductService {
         try {
             SearchResponse<Void> response = openSearchClient.search(s -> s
                             .size(0)
-                            .query(q -> q.bool(b -> b.filter(f -> f.term(t -> t.field("gender").value(FieldValue.of(gender))))))
+                            .query(q -> q.bool(b -> {
+                                if (gender != null && !gender.trim().isEmpty()) {}
+                                    return b.filter(f -> f.match(
+                                            t -> t.field("gender.keyword").query(FieldValue.of(gender)).fuzziness(
+                                                    "AUTO")));
+                                else return b;
+                            }))
                             .aggregations("categories", a -> a
                                     .terms(t -> t.field("category.keyword"))
                                     .aggregations("subcategories", sa -> sa
@@ -202,7 +207,6 @@ public class ProductServiceImpl implements ProductService {
                                                                "\"", "")))
                                             .toList()));
 
-            System.out.println(pp);
             return pp;
         } catch (Exception e) {
             throw new RuntimeException(e);

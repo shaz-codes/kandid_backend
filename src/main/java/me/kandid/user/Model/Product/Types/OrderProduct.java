@@ -57,8 +57,14 @@ public class OrderProduct {
     @Schema(description = "Brand name")
     private String brand;
 
-    @OneToMany(fetch = FetchType.EAGER)
-    @JoinColumn(name = "order_item")
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+            name = "order_visuals",
+            joinColumns = @JoinColumn(
+                    name = "visuals_id"
+            ),
+            inverseJoinColumns = @JoinColumn(name = "order_id")
+    )
     @Schema(description = "Visual assets (images, videos) for the product")
     private List<Visuals> visuals;
 
