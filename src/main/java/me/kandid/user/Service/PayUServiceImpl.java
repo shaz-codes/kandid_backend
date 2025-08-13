@@ -81,7 +81,7 @@ public class PayUServiceImpl implements PayUService {
                         order.setStatus("PLACED");
                     }
                     customerOrdersRepository.save(order);
-                    return URI.create("http://localhost:3000/profile/orders/details/" + deets
+                    return URI.create("http://localhost:3000/profile/orders/tracking/" + deets
                             .getTxnid() +
                             "?status=success").toURL();
                 } else {
@@ -96,7 +96,7 @@ public class PayUServiceImpl implements PayUService {
                     });
                     order.setStatus("FAILED");
                     customerOrdersRepository.save(order);
-                    return URI.create("http://localhost:3000/profile/orders/details/" + deets
+                    return URI.create("http://localhost:3000/profile/orders/tracking/" + deets
                             .getTxnid() +
                             "?status=failure").toURL();
                 }
@@ -149,7 +149,7 @@ public class PayUServiceImpl implements PayUService {
                     productVariantRepository.save(v);
                 });
                 customerOrdersRepository.save(order);
-                return URI.create("http://localhost:3000/profile/orders/details/" + deets
+                return URI.create("http://localhost:3000/profile/orders/tracking/" + deets
                         .getTxnid() +
                         "?status=failure").toURL();
 
