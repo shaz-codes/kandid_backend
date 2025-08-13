@@ -16,34 +16,77 @@ public class CustomerAddress {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Schema(title = "for Internal Use")
     private long id;
-    @Schema(title = "Phone Number", description = "Phone Number of customer", example = "9161086557")
+    @Schema(
+            title = "Phone Number",
+            description = "Phone Number of customer",
+            example = "9161086557"
+    )
     private long customerPhone;
-    @Schema(title = "Address Line 1", example = "84D-137")
+    @Schema(
+            title = "Address Line 1",
+            example = "84D-137"
+    )
+
+    @Column(length = 511)
     private String line1;
-    @Schema(title = "Address Line 2", example = "Chatameel")
-    private String line2;
-    @Schema(title = "City", example = "Lucknow")
+    @Schema(
+            title = "City",
+            example = "Lucknow"
+    )
     private String city;
-    @Schema(title = "State", example = "Uttar Pradesh")
+    @Schema(
+            title = "State",
+            example = "Uttar Pradesh"
+    )
     private String state;
-    @Schema(title = "Country", example = "India")
+    @Schema(
+            title = "Country",
+            example = "India"
+    )
     private String country;
-    @Schema(title = "Postal Code", example = "226001")
+    @Schema(
+            title = "Postal Code",
+            example = "226001"
+    )
     private String postalCode;
-    @Schema(title = "Nickname", description = "Nickname for the address, used for quick identification", example = "Home")
+    @Schema(
+            title = "Nickname",
+            description = "Nickname for the address, used for quick identification",
+            example = "Home"
+    )
     private String nickname;
-    @Schema(title = "Phone Number for address", description = "Phone number of the customer for this address, CAN BE DIFFERENT THAN THE CUSTOMER PHONE", example = "9161086557")
+    @Schema(
+            title = "Phone Number for address",
+            description = "Phone number of the customer for this address, CAN BE DIFFERENT THAN THE CUSTOMER PHONE",
+            example = "9161086557"
+    )
     private String phone;
-    @Schema(title = "Latitude", description = "Latitude for the address, used for location services", example = "26.8467")
+    @Schema(
+            title = "Latitude",
+            description = "Latitude for the address, used for location services",
+            example = "26.8467"
+    )
     private double latitude;
-    @Schema(title = "Longitude", description = "Longitude for the address, used for location services", example = "80.9462")
+    @Schema(
+            title = "Longitude",
+            description = "Longitude for the address, used for location services",
+            example = "80.9462"
+    )
     private double longitude;
 
     @CreationTimestamp
     @Column(updatable = false)
-    @Schema(title = "Creation Timestamp", description = "Timestamp when the address was created, can be used for sorting", example = "2023-10-01T12:00:00Z")
+    @Schema(
+            title = "Creation Timestamp",
+            description = "Timestamp when the address was created, can be used for sorting",
+            example = "2023-10-01T12:00:00Z"
+    )
     private Instant created;
     @UpdateTimestamp
-    @Schema(title = "Modification Timestamp", description = "Timestamp when the address was last modified, can be used for sorting", example = "2023-10-01T12:00:00Z")
+    @Schema(
+            title = "Modification Timestamp",
+            description = "Timestamp when the address was last modified, can be used for sorting",
+            example = "2023-10-01T12:00:00Z"
+    )
     private Instant modified;
 }

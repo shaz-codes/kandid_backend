@@ -88,14 +88,6 @@ public class CustomerOrder {
     )
     private DeliveryPartner deliveryPartner;
 
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "address")
-    @Schema(
-            title = "Customer Address",
-            description = "Address where the order is to be delivered"
-    )
-    private CustomerAddress customerAddress;
-
     @Schema(
             title = "Status",
             description = "Current status of the order",
@@ -161,4 +153,68 @@ public class CustomerOrder {
     private Boolean isPickedUp;
 
     private Boolean isCancelled;
+
+    @Schema(
+            title = "Address Line 1",
+            example = "84D-137"
+    )
+    @Column(length = 511)
+    private String line1;
+    @Schema(
+            title = "City",
+            example = "Lucknow"
+    )
+    private String city;
+    @Schema(
+            title = "State",
+            example = "Uttar Pradesh"
+    )
+    private String state;
+    @Schema(
+            title = "Country",
+            example = "India"
+    )
+    private String country;
+    @Schema(
+            title = "Postal Code",
+            example = "226001"
+    )
+    private String postalCode;
+    @Schema(
+            title = "Nickname",
+            description = "Nickname for the address, used for quick identification",
+            example = "Home"
+    )
+    private String nickname;
+    @Schema(
+            title = "Phone Number for address",
+            description = "Phone number of the customer for this address, CAN BE DIFFERENT THAN THE CUSTOMER PHONE",
+            example = "9161086557"
+    )
+    private String phone;
+    @Schema(
+            title = "Latitude",
+            description = "Latitude for the address, used for location services",
+            example = "26.8467"
+    )
+    private double latitude;
+    @Schema(
+            title = "Longitude",
+            description = "Longitude for the address, used for location services",
+            example = "80.9462"
+    )
+    private double longitude;
+
+    public void setCustomerAddress(CustomerAddress address) {
+        this.customerPhone = address.getCustomerPhone();
+        this.line1 = address.getLine1();
+        this.city = address.getCity();
+        this.state = address.getState();
+        this.country = address.getCountry();
+        this.postalCode = address.getPostalCode();
+        this.nickname = address.getNickname();
+        this.phone = address.getPhone();
+        this.latitude = address.getLatitude();
+        this.longitude = address.getLongitude();
+    }
 }
