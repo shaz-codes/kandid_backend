@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import me.kandid.user.Model.Product.ProductFilter;
 import me.kandid.user.Model.Product.Types.Product;
+import me.kandid.user.Model.Product.Types.SearchableProduct;
 import me.kandid.user.Model.Responses.SearchResult;
 import me.kandid.user.Service.ProductService;
 import me.kandid.user.Utils.Utils;
@@ -19,6 +20,8 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @CrossOrigin
@@ -115,8 +118,8 @@ public class ProductController {
             description = "for autocomplete in the searchbar"
     )
     @GetMapping("autocomplete")
-    public ResponseEntity<?> autoComplete(@RequestParam("q") String q) {
-        return new ResponseEntity<>(productService.autocomplete(q).hits().hits().stream().map(Hit::source),
+    public ResponseEntity<List<SearchableProduct>> autoComplete(@RequestParam("q") String q) {
+        return new ResponseEntity<>(productService.autocomplete(q).hits().hits().stream().map(Hit::source).toList(),
                 HttpStatus.OK);
     }
 }

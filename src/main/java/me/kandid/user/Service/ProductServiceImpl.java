@@ -176,8 +176,7 @@ public class ProductServiceImpl implements ProductService {
                             .query(q -> q.bool(b -> {
                                 if (gender != null && !gender.trim().isEmpty())
                                     return b.filter(f -> f.match(
-                                            t -> t.field("gender.keyword").query(FieldValue.of(gender)).fuzziness(
-                                                    "AUTO")));
+                                            t -> t.field("gender").query(FieldValue.of(gender))));
                                 else return b;
                             }))
                             .aggregations("categories", a -> a
