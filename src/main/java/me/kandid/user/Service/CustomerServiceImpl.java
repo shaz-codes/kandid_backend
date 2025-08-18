@@ -177,7 +177,10 @@ public class CustomerServiceImpl implements CustomerService {
         if (w == null) {
             w = createCustomerWishlist(customerPhone);
         }
-        Set<Product> products = w.getProducts();
+        Set<Product> products = Set.of();
+        if (w.getProducts() != null) {
+            products = w.getProducts();
+        }
         Product p = productRepository.getProductByCode(productCode);
         if (p == null) throw new ProductNotFound(productCode);
         products.add(p);
