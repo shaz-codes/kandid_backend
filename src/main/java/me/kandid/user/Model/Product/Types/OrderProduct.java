@@ -52,6 +52,7 @@ public class OrderProduct {
             description = "Detailed description of the product",
             example = "A comfortable cotton shirt perfect for casual occasions"
     )
+    @Column(length = 511)
     private String description;
 
     @Schema(description = "Brand name")
