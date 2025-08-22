@@ -6,9 +6,7 @@ import lombok.Data;
 import me.kandid.user.Model.Product.Visuals;
 
 import java.time.Instant;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @Entity
 @Data
@@ -43,7 +41,7 @@ public class CartProduct {
     private int quantity;
 
     @Transient
-    private Map<String, Integer> similarSizes;
+    private List<AvailSizes> similarSizes;
 
     @Transient
     @Schema(
@@ -100,10 +98,8 @@ public class CartProduct {
         CartProduct item = new CartProduct();
         item.id = id;
         item.sku = sku;
-        item.similarSizes = new HashMap<>();
-        product.getInventory().forEach(i -> {
-            item.similarSizes.put(i.getSku(), i.getAvailableStock());
-        });
+        item.similarSizes = product.getInventory().stream().map(i -> new AvailSizes(i.getSku(), i.getAvailableStock()))
+                                   .toList();
         item.productCode = product.getCode();
         item.name = product.getName();
         item.description = product.getDescription();
@@ -120,5 +116,16 @@ public class CartProduct {
         });
         item.quantity = quantity;
         return item;
+    }
+
+    @Data
+    public static class AvailSizes {
+        String sku;
+        int availableStock;
+
+        public AvailSizes(String sku, int availableStock) {
+            this.sku = sku;
+            this.availableStock = availableStock;
+        }
     }
 }
