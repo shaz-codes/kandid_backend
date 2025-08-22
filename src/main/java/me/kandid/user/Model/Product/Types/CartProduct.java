@@ -7,6 +7,7 @@ import me.kandid.user.Model.Product.Visuals;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Objects;
 
 @Entity
 @Data
@@ -94,12 +95,21 @@ public class CartProduct {
     )
     private String color;
 
+    @Transient
+    @Schema(
+            description = "Available Stock",
+            example = "3"
+    )
+    private int availableStock;
+
     public static CartProduct fromProduct(Product product, String sku, int quantity, long id) {
         CartProduct item = new CartProduct();
         item.id = id;
         item.sku = sku;
         item.similarSizes = product.getInventory().stream().map(i -> new AvailSizes(i.getSku(), i.getAvailableStock()))
                                    .toList();
+        item.availableStock = product.getInventory().stream().filter(q -> Objects.equals(q.getSku(), sku)).toList()
+                                     .getFirst().getAvailableStock();
         item.productCode = product.getCode();
         item.name = product.getName();
         item.description = product.getDescription();
