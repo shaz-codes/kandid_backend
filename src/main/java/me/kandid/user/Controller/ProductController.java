@@ -24,7 +24,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@CrossOrigin
+@CrossOrigin(origins = "https://kandid.me")
 @RequestMapping("/products")
 @Tag(
         name = "Products",

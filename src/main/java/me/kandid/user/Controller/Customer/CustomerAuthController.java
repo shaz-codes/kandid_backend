@@ -21,7 +21,7 @@ import java.time.Instant;
 
 @RestController
 @RequestMapping("otp")
-@CrossOrigin
+@CrossOrigin(origins = "https://kandid.me")
 @Tag(
         name = "Customer Authentication",
         description = "Endpoints for customer authentication using OTP (One Time Password)"

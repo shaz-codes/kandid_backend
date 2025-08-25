@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("profile")
-@CrossOrigin
+@CrossOrigin(origins = "https://kandid.me")
 @Tag(
         name = "Customer Profile",
         description = "Endpoints for managing customer profile operations"

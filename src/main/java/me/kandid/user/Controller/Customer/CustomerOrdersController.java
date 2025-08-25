@@ -28,7 +28,7 @@ import java.util.Map;
 
 @RequestMapping("/")
 @RestController
-@CrossOrigin
+@CrossOrigin(origins = "https://kandid.me")
 @Tag(
         name = "Customer Orders",
         description = "Endpoints for managing customer orders"

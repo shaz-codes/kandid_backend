@@ -19,7 +19,7 @@ import java.io.IOException;
 )
 @RestController
 @RequestMapping("/")
-@CrossOrigin
+@CrossOrigin(origins = "https://kandid.me")
 public class PayUController {
 
     @Autowired
