@@ -69,7 +69,6 @@ public class OrderProduct {
     @Schema(description = "Visual assets (images, videos) for the product")
     private List<Visuals> visuals;
 
-    //    @Transient
     @Schema(
             description = "Current selling price in paise (calculated dynamically with discounts)",
             example = "2999"

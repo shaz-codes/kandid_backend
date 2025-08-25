@@ -18,7 +18,7 @@ public interface CustomerService {
 
     Customer getCustomer(long id);
 
-    boolean customerExist(long phone);
+    boolean customerCreate(long phone);
 
     Customer saveCustomer(Customer customer);
 

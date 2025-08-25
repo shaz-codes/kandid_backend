@@ -107,7 +107,7 @@ public class CustomerAuthController {
 //                        .sign(Algorithm.HMAC256(System.getenv("ENCRYPT_KEY_KANDID")));
                         .sign(Algorithm.HMAC256("i0vriteFm08yJZxXrmuWiY7hsDDZhIcW"));
 
-        return new ResponseEntity<>(new OtpVerifyResponse(jwt, null, customerService.customerExist(phone)),
+        return new ResponseEntity<>(new OtpVerifyResponse(jwt, null, customerService.customerCreate(phone)),
                 HttpStatus.OK);
     }
 }

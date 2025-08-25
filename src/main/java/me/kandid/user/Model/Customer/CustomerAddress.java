@@ -16,6 +16,13 @@ public class CustomerAddress {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Schema(title = "for Internal Use")
     private long id;
+
+    @Schema(
+            title = "Name",
+            example = "Samriddh"
+    )
+    private String customerName;
+
     @Schema(
             title = "Phone Number",
             description = "Phone Number of customer",
