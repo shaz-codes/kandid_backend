@@ -15,7 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@CrossOrigin(origins = "https://kandid.me")
+@CrossOrigin
 @RequestMapping("wishlist")
 @Tag(
         name = "Customer Wishlist",

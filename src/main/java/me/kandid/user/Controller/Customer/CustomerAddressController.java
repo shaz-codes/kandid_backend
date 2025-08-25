@@ -19,7 +19,7 @@ import java.util.List;
 
 @RequestMapping("address")
 @RestController
-@CrossOrigin(origins = "https://kandid.me")
+@CrossOrigin
 @Tag(
         name = "Customer Addresses",
         description = "Operations for managing customer addresses"
