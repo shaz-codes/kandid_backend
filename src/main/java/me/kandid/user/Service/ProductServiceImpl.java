@@ -47,8 +47,8 @@ public class ProductServiceImpl implements ProductService {
         }
         Product product = products.stream().filter(p -> p.getCode().equals(code)).findFirst()
                                   .orElse(products.getFirst());
-        product.setColors(
-                products.stream().map(p -> new Product.Colors(p.getCode(), p.getColor(), p.getColorCode())).toList());
+//        product.setColors(
+//                products.stream().map(p -> new Product.Colors(p.getCode(), p.getColor(), p.getColorCode())).toList());
         if (phone > 0) {
             product.setInWishlist(customerWishlistRepository.isProductInWishlist(phone, code) == 1);
         }
