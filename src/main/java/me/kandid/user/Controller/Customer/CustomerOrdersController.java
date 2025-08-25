@@ -70,7 +70,7 @@ public class CustomerOrdersController {
     )
     public ResponseEntity<List<CustomerOrder>> getOrders(@RequestHeader(name = "Authorization") String token) {
         long phone = Utils.decodePhoneFromJWT(token);
-        List<CustomerOrder> orders = customerService.getAllCustomerOrders(phone);
+        List<CustomerOrder> orders = customerService.getAllCustomerOrders(phone).reversed();
         if (orders.isEmpty()) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
@@ -109,6 +109,27 @@ public class CustomerOrdersController {
         if (order == null) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
+        return new ResponseEntity<>(order, HttpStatus.OK);
+    }
+
+    @Operation(
+            summary = "Cancel for orders less than 2 minutes old",
+            description = "Needs orderid",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "302",
+                            description = "sends a location to redirect to",
+                            headers = @Header(name = "Location")
+                    )
+            }
+    )
+    @GetMapping("/orders/{id}/cancel")
+    public ResponseEntity<?> cancelOrder(@RequestHeader(name = "Authorization") String token,
+                                         @PathVariable String id) throws
+            IOException {
+        long phone = Utils.decodePhoneFromJWT(token);
+        CustomerOrder order = orderService.cancelOrder(phone,
+                Long.parseLong(id.replace("ORD", "")));
         return new ResponseEntity<>(order, HttpStatus.OK);
     }
 
