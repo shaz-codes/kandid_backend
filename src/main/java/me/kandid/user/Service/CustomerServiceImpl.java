@@ -110,8 +110,11 @@ public class CustomerServiceImpl implements CustomerService {
     }
 
     @Override
-    public boolean customerExist(long phone) {
-        return customerRepository.existsByPhone(phone);
+    public boolean customerCreate(long phone) {
+        Customer customer = new Customer();
+        customer.setPhone(phone);
+        customerRepository.save(customer);
+        return true;
     }
 
     @Override

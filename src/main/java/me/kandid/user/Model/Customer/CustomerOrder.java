@@ -155,6 +155,12 @@ public class CustomerOrder {
     private Boolean isCancelled;
 
     @Schema(
+            title = "Name",
+            example = "Samriddh"
+    )
+    private String customerName;
+
+    @Schema(
             title = "Address Line 1",
             example = "84D-137"
     )
@@ -206,6 +212,7 @@ public class CustomerOrder {
     private double longitude;
 
     public void setCustomerAddress(CustomerAddress address) {
+        this.customerName = address.getCustomerName();
         this.customerPhone = address.getCustomerPhone();
         this.line1 = address.getLine1();
         this.city = address.getCity();
