@@ -1,5 +1,6 @@
 package me.kandid.user.Service;
 
+import me.kandid.user.Model.Customer.CustomerOrder;
 import me.kandid.user.Model.Requests.OrderRequest;
 
 import java.io.IOException;
@@ -11,4 +12,6 @@ public interface OrderService {
     URL checkout_confirmed(long customerPhone, long orderId) throws IOException;
 
     URL checkout_cod(long customerPhone, OrderRequest orderRequest) throws IOException;
+
+    CustomerOrder cancelOrder(long customerPhone, long id) throws IOException;
 }

@@ -214,6 +214,7 @@ public class OrderServiceImpl implements OrderService {
 // Payment flow for non-REGULAR order types
         customerOrder.setStatus("PENDING");
         customerOrder.setPaymentStatus("PENDING");
+        customerOrder.setPaymentMethod("CASH_ON_DELIVERY");
 
 
         String txnId = "ORD" + orderId;
@@ -253,6 +254,16 @@ public class OrderServiceImpl implements OrderService {
             customerOrdersRepository.save(customerOrder);
             return paymentUrl;
         }
+    }
+
+    @Override
+    public CustomerOrder cancelOrder(long customerPhone, long id) throws IOException {
+        CustomerOrder order = customerOrdersRepository.getCustomerOrderByIdAndCustomerPhone(id, customerPhone);
+        order.setIsCancelled(true);
+//        TODO: DON'T CHANGE ORDER STATUS
+        order.setStatus("CANCELLED");
+        customerOrdersRepository.save(order);
+        return order;
     }
 
 //    Helper functions
