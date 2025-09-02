@@ -35,6 +35,9 @@ public class PayUServiceImpl implements PayUService {
     @Value("${payu.verify.url}")
     private String verifyUrl;
 
+    @Value("${frontend.url}")
+    private String frontendUrl;
+
     @Autowired
     CustomerOrdersRepository customerOrdersRepository;
 
@@ -81,7 +84,7 @@ public class PayUServiceImpl implements PayUService {
                         order.setStatus("PLACED");
                     }
                     customerOrdersRepository.save(order);
-                    return URI.create("http://localhost:3000/profile/orders/tracking/" + deets
+                    return URI.create(frontendUrl + deets
                             .getTxnid() +
                             "?status=success").toURL();
                 } else {
@@ -96,7 +99,7 @@ public class PayUServiceImpl implements PayUService {
                     });
                     order.setStatus("FAILED");
                     customerOrdersRepository.save(order);
-                    return URI.create("http://localhost:3000/profile/orders/tracking/" + deets
+                    return URI.create(frontendUrl + deets
                             .getTxnid() +
                             "?status=failure").toURL();
                 }
@@ -149,7 +152,7 @@ public class PayUServiceImpl implements PayUService {
                     productVariantRepository.save(v);
                 });
                 customerOrdersRepository.save(order);
-                return URI.create("http://localhost:3000/profile/orders/tracking/" + deets
+                return URI.create(frontendUrl + deets
                         .getTxnid() +
                         "?status=failure").toURL();
 

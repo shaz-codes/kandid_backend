@@ -48,6 +48,9 @@ public class OrderServiceImpl implements OrderService {
     @Value("${backend.url}")
     private String backendUrl;
 
+    @Value("&{frontend.url}")
+    private String frontendUrl;
+
     @Autowired
     private ProductRepository productRepository;
 
@@ -207,7 +210,7 @@ public class OrderServiceImpl implements OrderService {
             // productVariantRepository.save(variants.getFirst());
             // System.out.println(variants.getFirst());
             customerOrdersRepository.save(customerOrder);
-            return URI.create("http://localhost:3000/profile/orders/details/" + customerOrder.getIdInString() +
+            return URI.create(frontendUrl + customerOrder.getIdInString() +
                     "?status=success").toURL(); //
         }
 
