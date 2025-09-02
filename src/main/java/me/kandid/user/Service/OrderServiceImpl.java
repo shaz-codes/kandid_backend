@@ -48,7 +48,7 @@ public class OrderServiceImpl implements OrderService {
     @Value("${backend.url}")
     private String backendUrl;
 
-    @Value("&{frontend.url}")
+    @Value("${frontend.url}")
     private String frontendUrl;
 
     @Autowired
