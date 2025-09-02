@@ -32,7 +32,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-
 @Service
 @Transactional
 public class OrderServiceImpl implements OrderService {
@@ -42,7 +41,6 @@ public class OrderServiceImpl implements OrderService {
 
     @Value("${payu.salt}")
     private String salt;
-
 
     @Value("${payu.payments.url}")
     private String payuPaymentsUrl;
@@ -80,10 +78,11 @@ public class OrderServiceImpl implements OrderService {
         customerOrder.setCustomerPhone(customerPhone);
         customerOrder.setType(orderRequest.getOrderType());
 
-        CustomerAddress address =
-                customerAddressRepository.getCustomerAddressByIdAndCustomerPhone(orderRequest.getAddress().getId(),
-                        customerPhone);
-        if (address == null) throw new RuntimeException("Address ID not found");
+        CustomerAddress address = customerAddressRepository.getCustomerAddressByIdAndCustomerPhone(
+                orderRequest.getAddress().getId(),
+                customerPhone);
+        if (address == null)
+            throw new RuntimeException("Address ID not found");
         customerOrder.setCustomerAddress(address);
 
         List<ProductVariant> variants = new ArrayList<>();
@@ -96,14 +95,13 @@ public class OrderServiceImpl implements OrderService {
 
         // Prepare PayU payment parameters
         String txnId = "ORD" + orderId;
-        String firstName = getFirstName(customer.getName());
-        String lastName = getLastName(customer.getName());
+        String firstName = getFirstName(address.getCustomerName());
+        String lastName = getLastName(address.getCustomerName());
         String amount = String.valueOf(customerOrder.getBillAmount());
         Map<String, String> params = Utils.createHashMap(
-                merchantKey, amount, firstName, customer.getEmail(),
+                merchantKey, amount, firstName, customer.getEmail() != null ? customer.getEmail() : "",
                 String.valueOf(customer.getPhone()), "Payment for order on Kandid",
-                backendUrl + "success", backendUrl + "failure", txnId
-        );
+                backendUrl + "success", backendUrl + "failure", txnId);
 
         params.put("hash", Utils.generateHashPaymentsAPI(params, salt));
         params.put("lastname", lastName);
@@ -138,18 +136,18 @@ public class OrderServiceImpl implements OrderService {
     public URL checkout_confirmed(long customerPhone, long orderId) throws IOException {
         CustomerOrder customerOrder = customerOrdersRepository.getCustomerOrderById(orderId);
         double bill = customerOrder.getBillAmount();
-        if (customerOrder.getType().equals(OrderTypes.TRY_AND_BUY)) bill = bill - 35.0;
+        if (customerOrder.getType().equals(OrderTypes.TRY_AND_BUY))
+            bill = bill - 35.0;
         Customer customer = customerRepository.getCustomerByPhone(customerPhone);
-        String firstName = getFirstName(customer.getName());
-        String lastName = getLastName(customer.getName());
+        String firstName = getFirstName(customerOrder.getCustomerName());
+        String lastName = getLastName(customerOrder.getCustomerName());
         String amount = String.valueOf(bill); // Consider using actual `bill` if dynamic pricing
 
         customerOrder.setPaymentStatus("PENDING");
         Map<String, String> params = Utils.createHashMap(
                 merchantKey, amount, firstName, customer.getEmail(),
                 String.valueOf(customer.getPhone()), "Payment for try and buy on Kandid",
-                backendUrl + "success", backendUrl + "failure", customerOrder.getIdInString()
-        );
+                backendUrl + "success", backendUrl + "failure", customerOrder.getIdInString());
 
         params.put("hash", Utils.generateHashPaymentsAPI(params, salt));
         params.put("lastname", lastName);
@@ -191,7 +189,8 @@ public class OrderServiceImpl implements OrderService {
 
         CustomerAddress address = customerAddressRepository.getCustomerAddressByIdAndCustomerPhone(
                 orderRequest.getAddress().getId(), customerPhone);
-        if (address == null) throw new RuntimeException("Address ID not found");
+        if (address == null)
+            throw new RuntimeException("Address ID not found");
         customerOrder.setCustomerAddress(address);
 
         List<ProductVariant> variants = new ArrayList<>();
@@ -205,27 +204,26 @@ public class OrderServiceImpl implements OrderService {
             customerOrder.setPaymentStatus("NOT_ATTEMPTED");
 
             customerCartRepository.deleteAllByCustomerPhone(customerPhone);
-            productVariantRepository.save(variants.getFirst());
+            // productVariantRepository.save(variants.getFirst());
+            // System.out.println(variants.getFirst());
             customerOrdersRepository.save(customerOrder);
             return URI.create("http://localhost:3000/profile/orders/details/" + customerOrder.getIdInString() +
                     "?status=success").toURL(); //
         }
 
-// Payment flow for non-REGULAR order types
+        // Payment flow for non-REGULAR order types
         customerOrder.setStatus("PENDING");
         customerOrder.setPaymentStatus("PENDING");
         customerOrder.setPaymentMethod("CASH_ON_DELIVERY");
 
-
         String txnId = "ORD" + orderId;
-        String firstName = getFirstName(customer.getName());
-        String lastName = getLastName(customer.getName());
+        String firstName = getFirstName(address.getCustomerName());
+        String lastName = getLastName(address.getCustomerName());
         String amount = "35.0"; // Consider using actual `bill` if dynamic pricing
         Map<String, String> params = Utils.createHashMap(
                 merchantKey, amount, firstName, customer.getEmail(),
                 String.valueOf(customer.getPhone()), "Payment for try and buy on Kandid",
-                backendUrl + "success", backendUrl + "failure", txnId
-        );
+                backendUrl + "success", backendUrl + "failure", txnId);
 
         params.put("hash", Utils.generateHashPaymentsAPI(params, salt));
         params.put("lastname", lastName);
@@ -251,6 +249,7 @@ public class OrderServiceImpl implements OrderService {
 
             customerCartRepository.deleteAllByCustomerPhone(customerPhone);
             productVariantRepository.save(variants.getFirst());
+            System.out.println(variants.getFirst());
             customerOrdersRepository.save(customerOrder);
             return paymentUrl;
         }
@@ -260,13 +259,13 @@ public class OrderServiceImpl implements OrderService {
     public CustomerOrder cancelOrder(long customerPhone, long id) throws IOException {
         CustomerOrder order = customerOrdersRepository.getCustomerOrderByIdAndCustomerPhone(id, customerPhone);
         order.setIsCancelled(true);
-//        TODO: DON'T CHANGE ORDER STATUS
+        // TODO: DON'T CHANGE ORDER STATUS
         order.setStatus("CANCELLED");
         customerOrdersRepository.save(order);
         return order;
     }
 
-//    Helper functions
+    // Helper functions
 
     private void processOrder(int quantity, List<ProductVariant> variants, List<OrderProduct> orderProducts,
                               String sku) {
@@ -285,9 +284,12 @@ public class OrderServiceImpl implements OrderService {
     }
 
     private void validateOrderRequest(OrderRequest request) {
-        if (request.getAddress() == null) throw new RuntimeException("Address is null");
-        if (request.getOrderType() == null) throw new RuntimeException("OrderType is null");
-        if (request.getBuynow() == null) throw new RuntimeException("BuyNow is null");
+        if (request.getAddress() == null)
+            throw new RuntimeException("Address is null");
+        if (request.getOrderType() == null)
+            throw new RuntimeException("OrderType is null");
+        if (request.getBuynow() == null)
+            throw new RuntimeException("BuyNow is null");
     }
 
     private List<OrderProduct> prepareOrderItems(OrderRequest request, String phone, List<ProductVariant> variants) {
@@ -296,7 +298,8 @@ public class OrderServiceImpl implements OrderService {
             processOrder(request.getQuantity(), variants, items, request.getSku());
         } else {
             List<CartProduct> cartItems = customerCartRepository.findAllByCustomerPhone(Long.parseLong(phone));
-            if (cartItems.isEmpty()) throw new RuntimeException("Cart is empty");
+            if (cartItems.isEmpty())
+                throw new RuntimeException("Cart is empty");
             for (CartProduct item : cartItems) {
                 processOrder(item.getQuantity(), variants, items, item.getSku());
             }
