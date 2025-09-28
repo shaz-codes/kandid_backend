@@ -28,7 +28,9 @@ public class CustomerAddress {
             description = "Phone Number of customer",
             example = "9161086557"
     )
-    private long customerPhone;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "phone")
+    private Customer customer;
     @Schema(
             title = "Address Line 1",
             example = "84D-137"

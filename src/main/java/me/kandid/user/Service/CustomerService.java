@@ -3,20 +3,19 @@ package me.kandid.user.Service;
 import me.kandid.user.Model.Customer.Customer;
 import me.kandid.user.Model.Customer.CustomerAddress;
 import me.kandid.user.Model.Customer.CustomerOrder;
-import me.kandid.user.Model.Customer.CustomerWishlist;
 import me.kandid.user.Model.Product.Types.CartProduct;
+import me.kandid.user.Model.Product.Types.Product;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Set;
 
 public interface CustomerService {
-
+    Customer getCustomer(long phone);
 
     String sendOTP(String phone) throws IOException, InterruptedException;
 
-    long verifyOTP(String id, String otp) throws Exception;
-
-    Customer getCustomer(long id);
+    long verifyOTP(String id, String code) throws Exception;
 
     boolean customerCreate(long phone);
 
@@ -28,15 +27,13 @@ public interface CustomerService {
 
     List<CustomerAddress> getAllCustomerAddress(long customerPhone);
 
-    CustomerAddress addCustomerAddress(CustomerAddress customerAddress);
+    CustomerAddress addCustomerAddress(CustomerAddress customerAddress, long customerPhone);
 
-    CustomerAddress updateCustomerAddress(CustomerAddress customerAddress);
+    CustomerAddress updateCustomerAddress(CustomerAddress customerAddress, long customerPhone);
 
-    void deleteCustomerAddress(CustomerAddress customerAddress);
+    void deleteCustomerAddress(CustomerAddress customerAddress, long customerPhone);
 
-    CustomerWishlist getCustomerWishlist(long customerPhone);
-
-    CustomerWishlist createCustomerWishlist(long customerPhone);
+    Set<Product> getCustomerWishlist(long customerPhone);
 
     void addToCustomerWishlist(long customerPhone, String productCode);
 

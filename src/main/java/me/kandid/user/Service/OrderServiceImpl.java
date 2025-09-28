@@ -129,7 +129,7 @@ public class OrderServiceImpl implements OrderService {
             URL paymentUrl = URI.create(Objects.requireNonNull(response.header("Location"))).toURL();
             customerOrder.setPaymentLink(paymentUrl);
 
-            customerCartRepository.deleteAllByCustomerPhone(customerPhone);
+            customerCartRepository.deleteAllByCustomer_Phone(customerPhone);
             customerOrdersRepository.save(customerOrder);
             return paymentUrl;
         }
@@ -206,7 +206,7 @@ public class OrderServiceImpl implements OrderService {
             customerOrder.setStatus("PLACED");
             customerOrder.setPaymentStatus("NOT_ATTEMPTED");
 
-            customerCartRepository.deleteAllByCustomerPhone(customerPhone);
+            customerCartRepository.deleteAllByCustomer_Phone(customerPhone);
             // productVariantRepository.save(variants.getFirst());
             // System.out.println(variants.getFirst());
             customerOrdersRepository.save(customerOrder);
@@ -250,7 +250,7 @@ public class OrderServiceImpl implements OrderService {
             URL paymentUrl = URI.create(Objects.requireNonNull(response.header("Location"))).toURL();
             customerOrder.setPaymentLink(paymentUrl);
 
-            customerCartRepository.deleteAllByCustomerPhone(customerPhone);
+            customerCartRepository.deleteAllByCustomer_Phone(customerPhone);
             productVariantRepository.save(variants.getFirst());
             System.out.println(variants.getFirst());
             customerOrdersRepository.save(customerOrder);
@@ -300,7 +300,7 @@ public class OrderServiceImpl implements OrderService {
         if (Boolean.TRUE.equals(request.getBuynow())) {
             processOrder(request.getQuantity(), variants, items, request.getSku());
         } else {
-            List<CartProduct> cartItems = customerCartRepository.findAllByCustomerPhone(Long.parseLong(phone));
+            List<CartProduct> cartItems = customerCartRepository.findAllByCustomer_Phone(Long.parseLong(phone));
             if (cartItems.isEmpty())
                 throw new RuntimeException("Cart is empty");
             for (CartProduct item : cartItems) {

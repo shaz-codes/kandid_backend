@@ -1,11 +1,12 @@
 package me.kandid.user.Service;
 
 import me.kandid.user.Exceptions.ProductNotFound;
+import me.kandid.user.Model.Customer.WishlistProductsId;
 import me.kandid.user.Model.Product.ProductFilter;
 import me.kandid.user.Model.Product.Types.Product;
 import me.kandid.user.Model.Product.Types.SearchableProduct;
 import me.kandid.user.Model.Responses.SearchResult;
-import me.kandid.user.Repository.Customer.CustomerWishlistRepository;
+import me.kandid.user.Repository.Customer.WislistProductRepository;
 import me.kandid.user.Repository.ProductRepository;
 import me.kandid.user.Utils.Utils;
 import org.opensearch.client.opensearch.OpenSearchClient;
@@ -37,7 +38,7 @@ public class ProductServiceImpl implements ProductService {
     private ProductRepository productRepository;
 
     @Autowired
-    CustomerWishlistRepository customerWishlistRepository;
+    private WislistProductRepository wislistProductRepository;
 
     @Override
     public Product getProduct(String code, long phone) {
@@ -46,11 +47,11 @@ public class ProductServiceImpl implements ProductService {
             throw new ProductNotFound(code);
         }
         Product product = products.stream().filter(p -> p.getCode().equals(code)).findFirst()
-                                  .orElse(products.getFirst());
+                .orElse(products.getFirst());
 //        product.setColors(
 //                products.stream().map(p -> new Product.Colors(p.getCode(), p.getColor(), p.getColorCode())).toList());
         if (phone > 0) {
-            product.setInWishlist(customerWishlistRepository.isProductInWishlist(phone, code) == 1);
+            product.setInWishlist(wislistProductRepository.existsById(new WishlistProductsId(phone, code)));
         }
         return product;
     }
@@ -75,63 +76,63 @@ public class ProductServiceImpl implements ProductService {
         try {
             SearchRequest searchRequest =
                     new SearchRequest.Builder().index(indexName)
-                                               .query(
-                                                       q -> q.bool(
-                                                               b -> {
-                                                                   if (s != null && !s.trim().isEmpty()) {
-                                                                       b.must(m -> m.multiMatch(
-                                                                               mm -> mm.query(s).fuzziness("AUTO")));
-                                                                   }
-                                                                   if (filter != null) {
-                                                                       b.filter(Utils.createFilter(filter));
-                                                                   }
-                                                                   b.must(m -> m.match(mm -> mm.field("active")
-                                                                                               .query(FieldValue.of(
-                                                                                                       true))));
-                                                                   return b;
-                                                               }))
-                                               .size(pageable.getPageSize())
-                                               .from(pageable.getPageNumber())
-                                               .aggregations(
-                                                       fields.stream()
-                                                             .filter(v -> !v.equals("code") && !v.equals(
-                                                                     "visuals") && !v.equals(
-                                                                     "description") && !v.equals(
-                                                                     "name") && !v.equals("colorName") && !v.equals(
-                                                                     "active"))
-                                                             .collect(
-                                                                     Collectors.toMap((v) -> v,
-                                                                             (v) -> Aggregation.of(
-                                                                                     a -> a.terms(
-                                                                                             ta -> ta.field(
-                                                                                                     v.concat(
-                                                                                                             ".keyword")))))))
-                                               .sort(sort -> {
-                                                   if (filter.getSortType() != null) {
-                                                       System.out.println(filter.getSortType());
-                                                       if (filter.getSortType().equalsIgnoreCase("ASC")) {
-                                                           return sort.field(
-                                                                   a -> a.field("sellingPrice").order(SortOrder.Asc));
-                                                       } else if (filter.getSortType().equals("DSC")) {
-                                                           return sort.field(
-                                                                   a -> a.field("sellingPrice").order(SortOrder.Desc));
-                                                       }
-                                                   }
-                                                   return sort.score(ss -> ss.order(SortOrder.Asc));
-                                               })
-                                               .build();
+                            .query(
+                                    q -> q.bool(
+                                            b -> {
+                                                if (s != null && !s.trim().isEmpty()) {
+                                                    b.must(m -> m.multiMatch(
+                                                            mm -> mm.query(s).fuzziness("AUTO")));
+                                                }
+                                                if (filter != null) {
+                                                    b.filter(Utils.createFilter(filter));
+                                                }
+                                                b.must(m -> m.match(mm -> mm.field("active")
+                                                        .query(FieldValue.of(
+                                                                true))));
+                                                return b;
+                                            }))
+                            .size(pageable.getPageSize())
+                            .from(pageable.getPageNumber())
+                            .aggregations(
+                                    fields.stream()
+                                            .filter(v -> !v.equals("code") && !v.equals(
+                                                    "visuals") && !v.equals(
+                                                    "description") && !v.equals(
+                                                    "name") && !v.equals("colorName") && !v.equals(
+                                                    "active"))
+                                            .collect(
+                                                    Collectors.toMap((v) -> v,
+                                                            (v) -> Aggregation.of(
+                                                                    a -> a.terms(
+                                                                            ta -> ta.field(
+                                                                                    v.concat(
+                                                                                            ".keyword")))))))
+                            .sort(sort -> {
+                                if (filter.getSortType() != null) {
+                                    System.out.println(filter.getSortType());
+                                    if (filter.getSortType().equalsIgnoreCase("ASC")) {
+                                        return sort.field(
+                                                a -> a.field("sellingPrice").order(SortOrder.Asc));
+                                    } else if (filter.getSortType().equals("DSC")) {
+                                        return sort.field(
+                                                a -> a.field("sellingPrice").order(SortOrder.Desc));
+                                    }
+                                }
+                                return sort.score(ss -> ss.order(SortOrder.Asc));
+                            })
+                            .build();
             SearchResponse<SearchableProduct> p = openSearchClient.search(searchRequest, SearchableProduct.class);
             SearchResult sr = new SearchResult();
             List<SearchableProduct> products = p.hits().hits().stream().map(Hit::source).toList();
             if (phone > 0) {
                 products = products.stream().peek(t -> t.setInWishlist(
-                        customerWishlistRepository.isProductInWishlist(phone, t.getCode()) == 1)).toList();
+                        wislistProductRepository.existsById(new WishlistProductsId(phone, t.getCode())))).toList();
             }
             sr.setProducts(products);
             sr.setFilters(p.aggregations().entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey,
                     o -> o.getValue().sterms().buckets().array().stream()
-                          .collect(Collectors.toMap(StringTermsBucket::key,
-                                  StringTermsBucket::docCount)))));
+                            .collect(Collectors.toMap(StringTermsBucket::key,
+                                    StringTermsBucket::docCount)))));
             assert p.hits().total() != null;
             sr.setTotal(p.hits().total().value());
             return sr;
@@ -147,20 +148,20 @@ public class ProductServiceImpl implements ProductService {
         try {
             SearchRequest searchRequest =
                     new SearchRequest.Builder().index(indexName)
-                                               .query(
-                                                       q -> q.bool(b -> b.should(
-                                                                                 s -> s.match(v -> v.field("name.autocomplete")
-                                                                                                    .query(FieldValue.of(a))
-                                                                                 ))
-                                                                         .should(s -> s.match(v -> v.field("name")
-                                                                                                    .query(FieldValue.of(
-                                                                                                            a))
-                                                                                                    .fuzziness(
-                                                                                                            "AUTO")))
-                                                                         .should(s -> s.matchPhrasePrefix(
-                                                                                 v -> v.field("name").query(a)))))
-                                               .size(30)
-                                               .build();
+                            .query(
+                                    q -> q.bool(b -> b.should(
+                                                    s -> s.match(v -> v.field("name.autocomplete")
+                                                            .query(FieldValue.of(a))
+                                                    ))
+                                            .should(s -> s.match(v -> v.field("name")
+                                                    .query(FieldValue.of(
+                                                            a))
+                                                    .fuzziness(
+                                                            "AUTO")))
+                                            .should(s -> s.matchPhrasePrefix(
+                                                    v -> v.field("name").query(a)))))
+                            .size(30)
+                            .build();
             SearchResponse<SearchableProduct> p = openSearchClient.search(searchRequest, SearchableProduct.class);
             return p;
         } catch (Exception e) {
@@ -194,16 +195,16 @@ public class ProductServiceImpl implements ProductService {
                     Void.class
             );
             Map<String, List<Map<String, String>>> pp = response.aggregations().get("categories").sterms().buckets()
-                                                                .array()
-                                                                .stream().collect(Collectors
+                    .array()
+                    .stream().collect(Collectors
                             .toMap(StringTermsBucket::key,
                                     sc -> sc.aggregations().get("subcategories").sterms().buckets().array().stream()
                                             .map(sca -> Map.of(sca.key(),
                                                     sca.aggregations().get("sample_visual").topHits().hits().hits()
-                                                       .getFirst()
-                                                       .source().toJson().asJsonObject().get("visuals").asJsonArray()
-                                                       .getFirst().asJsonObject().get("dataURL").toString().replace(
-                                                               "\"", "")))
+                                                            .getFirst()
+                                                            .source().toJson().asJsonObject().get("visuals").asJsonArray()
+                                                            .getFirst().asJsonObject().get("dataURL").toString().replace(
+                                                                    "\"", "")))
                                             .toList()));
 
             return pp;

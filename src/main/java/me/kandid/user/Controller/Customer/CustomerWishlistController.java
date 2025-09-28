@@ -1,18 +1,21 @@
 package me.kandid.user.Controller.Customer;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import me.kandid.user.Model.Customer.CustomerWishlist;
+import me.kandid.user.Model.Product.Types.Product;
 import me.kandid.user.Service.CustomerService;
 import me.kandid.user.Utils.Utils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Set;
 
 @RestController
 @CrossOrigin
@@ -37,7 +40,7 @@ public class CustomerWishlistController {
                             description = "Wishlist retrieved successfully",
                             content = @Content(
                                     mediaType = "application/json",
-                                    schema = @Schema(implementation = CustomerWishlist.class)
+                                    array = @ArraySchema(schema = @Schema(implementation = Product.class))
                             )
                     ),
                     @ApiResponse(
@@ -50,9 +53,9 @@ public class CustomerWishlistController {
                     ),
             }
     )
-    public ResponseEntity<CustomerWishlist> getWishlist(@RequestHeader(name = "Authorization") String token) {
+    public ResponseEntity<Set<Product>> getWishlist(@RequestHeader(name = "Authorization") String token) {
         long phone = Utils.decodePhoneFromJWT(token);
-        CustomerWishlist wish = customerService.getCustomerWishlist(phone);
+        Set<Product> wish = customerService.getCustomerWishlist(phone);
         if (wish == null) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
@@ -73,8 +76,8 @@ public class CustomerWishlistController {
                     ),
             }
     )
-    public ResponseEntity<CustomerWishlist> addToWishlist(@RequestHeader(name = "Authorization") String token,
-                                                          @RequestParam String code) {
+    public ResponseEntity<?> addToWishlist(@RequestHeader(name = "Authorization") String token,
+                                           @RequestParam String code) {
         long phone = Utils.decodePhoneFromJWT(token);
         customerService.addToCustomerWishlist(phone, code);
         return new ResponseEntity<>(HttpStatus.OK);
@@ -94,8 +97,8 @@ public class CustomerWishlistController {
                     )
             }
     )
-    public ResponseEntity<CustomerWishlist> removeFromWishlist(@RequestHeader(name = "Authorization") String token,
-                                                               @RequestParam String code) {
+    public ResponseEntity<?> removeFromWishlist(@RequestHeader(name = "Authorization") String token,
+                                                @RequestParam String code) {
         long phone = Utils.decodePhoneFromJWT(token);
         customerService.removeFromCustomerWishlist(phone, code);
         return new ResponseEntity<>(HttpStatus.OK);

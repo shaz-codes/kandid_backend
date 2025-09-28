@@ -1,6 +1,7 @@
 package me.kandid.user.Service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import me.kandid.user.Exceptions.CustomerNotFound;
 import me.kandid.user.Exceptions.ProductNotFound;
 import me.kandid.user.Model.Customer.*;
 import me.kandid.user.Model.MessageCentral.Response;
@@ -34,7 +35,7 @@ public class CustomerServiceImpl implements CustomerService {
     private CustomerAddressRepository customerAddressRepository;
 
     @Autowired
-    private CustomerWishlistRepository customerWishlistRepository;
+    private WislistProductRepository wislistProductRepository;
 
     @Autowired
     private CustomerOrdersRepository customerOrdersRepository;
@@ -59,11 +60,11 @@ public class CustomerServiceImpl implements CustomerService {
     public String sendOTP(String phone) throws IOException, InterruptedException {
         HttpClient client = HttpClient.newBuilder().build();
         HttpRequest body = HttpRequest.newBuilder().POST(HttpRequest.BodyPublishers.noBody()).setHeader("authToken",
-                                              "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJDLTlENkE1QzJDREE0MTQ5MSIsImlhdCI6MTc0NDAwNzM1MywiZXhwIjoxOTAxNjg3MzUzfQ.c7RSTI2P2O-YHp2bhum2jmv5vDILN74tEiQmIYKzn1YicnbC4XmKDXwMMKpFTzdsYMITg5oA8Tq6z7XWTkapuw")
-                                      .uri(URI.create(
-                                              "https://cpaas.messagecentral.com/verification/v3/send?countryCode=91&flowType=SMS&mobileNumber="
-                                                      + phone))
-                                      .build();
+                        "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJDLTlENkE1QzJDREE0MTQ5MSIsImlhdCI6MTc0NDAwNzM1MywiZXhwIjoxOTAxNjg3MzUzfQ.c7RSTI2P2O-YHp2bhum2jmv5vDILN74tEiQmIYKzn1YicnbC4XmKDXwMMKpFTzdsYMITg5oA8Tq6z7XWTkapuw")
+                .uri(URI.create(
+                        "https://cpaas.messagecentral.com/verification/v3/send?countryCode=91&flowType=SMS&mobileNumber="
+                                + phone))
+                .build();
         HttpResponse<String> res = client.send(body, HttpResponse.BodyHandlers.ofString());
         ObjectMapper mapper = new ObjectMapper();
         Response re = mapper.readValue(res.body(), Response.class);
@@ -78,11 +79,11 @@ public class CustomerServiceImpl implements CustomerService {
     public long verifyOTP(String id, String code) throws Exception {
         HttpClient client = HttpClient.newBuilder().build();
         HttpRequest body = HttpRequest.newBuilder().GET().setHeader("authToken",
-                                              "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJDLTlENkE1QzJDREE0MTQ5MSIsImlhdCI6MTc0NDAwNzM1MywiZXhwIjoxOTAxNjg3MzUzfQ.c7RSTI2P2O-YHp2bhum2jmv5vDILN74tEiQmIYKzn1YicnbC4XmKDXwMMKpFTzdsYMITg5oA8Tq6z7XWTkapuw")
-                                      .uri(URI.create(
-                                              "https://cpaas.messagecentral.com/verification/v3/validateOtp?&verificationId=" + id
-                                                      + "&code=" + code))
-                                      .build();
+                        "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJDLTlENkE1QzJDREE0MTQ5MSIsImlhdCI6MTc0NDAwNzM1MywiZXhwIjoxOTAxNjg3MzUzfQ.c7RSTI2P2O-YHp2bhum2jmv5vDILN74tEiQmIYKzn1YicnbC4XmKDXwMMKpFTzdsYMITg5oA8Tq6z7XWTkapuw")
+                .uri(URI.create(
+                        "https://cpaas.messagecentral.com/verification/v3/validateOtp?&verificationId=" + id
+                                + "&code=" + code))
+                .build();
         HttpResponse<String> res = client.send(body, HttpResponse.BodyHandlers.ofString());
         //
         // String ex ="{\n" +
@@ -119,7 +120,6 @@ public class CustomerServiceImpl implements CustomerService {
 
     @Override
     public Customer saveCustomer(Customer customer) {
-        createCustomerWishlist(customer.getPhone());
         return customerRepository.save(customer);
     }
 
@@ -139,65 +139,50 @@ public class CustomerServiceImpl implements CustomerService {
     }
 
     @Override
-    public CustomerAddress addCustomerAddress(CustomerAddress customerAddress) {
+    public CustomerAddress addCustomerAddress(CustomerAddress customerAddress, long customerPhone) {
+
         return customerAddressRepository.save(customerAddress);
     }
 
     @Override
-    public CustomerAddress updateCustomerAddress(CustomerAddress customerAddress) {
+    public CustomerAddress updateCustomerAddress(CustomerAddress customerAddress, long customerPhone) {
         return customerAddressRepository.save(customerAddress);
     }
 
     @Override
-    public void deleteCustomerAddress(CustomerAddress customerAddress) {
+    public void deleteCustomerAddress(CustomerAddress customerAddress, long customerPhone) {
         customerAddressRepository.delete(customerAddress);
     }
 
     @Override
-    public CustomerWishlist getCustomerWishlist(long customerPhone) {
-        CustomerWishlist w = customerWishlistRepository.getByCustomerPhone(customerPhone);
-        if (w == null) {
-            w = createCustomerWishlist(customerPhone);
-        }
-        w.setProducts(w.getProducts().stream()
-                       .peek(p -> p.setInWishlist(
-                               true))
-                       .collect(
-                               Collectors.toSet()));
-        return w;
-    }
-
-    @Override
-    public CustomerWishlist createCustomerWishlist(long customerPhone) {
-        CustomerWishlist customerWishlist = new CustomerWishlist();
-        customerWishlist.setCustomerPhone(customerPhone);
-        return customerWishlistRepository.save(customerWishlist);
+    public Set<Product> getCustomerWishlist(long customerPhone) {
+        Set<WishlistProducts> w = wislistProductRepository.getAllByCustomer_Phone(customerPhone);
+        return w.stream()
+                .map(WishlistProducts::getProduct)
+                .peek(p -> p.setInWishlist(
+                        true))
+                .collect(
+                        Collectors.toSet());
     }
 
     @Override
     public void addToCustomerWishlist(long customerPhone, String productCode) {
-        CustomerWishlist w = customerWishlistRepository.getByCustomerPhone(customerPhone);
-        if (w == null) {
-            w = createCustomerWishlist(customerPhone);
-        }
-        Set<Product> products = Set.of();
-        if (w.getProducts() != null) {
-            products = w.getProducts();
-        }
-        Product p = productRepository.getProductByCode(productCode);
-        if (p == null) throw new ProductNotFound(productCode);
-        products.add(p);
-        customerWishlistRepository.save(w);
+        Customer customer = customerRepository.findById(customerPhone).orElseThrow(() -> new CustomerNotFound(customerPhone));
+        Product product = productRepository.findById(productCode).orElseThrow(() -> new ProductNotFound(productCode));
+        WishlistProductsId wishlistProductsId = new WishlistProductsId(customer.getPhone(), product.getCode());
+        WishlistProducts wishlistProducts = new WishlistProducts();
+        wishlistProducts.setCustomer(customer);
+        wishlistProducts.setProduct(product);
+        wishlistProducts.setId(wishlistProductsId);
+        wislistProductRepository.save(wishlistProducts);
     }
 
     @Override
     public void removeFromCustomerWishlist(long customerPhone, String productCode) {
-        CustomerWishlist customerWishlist = customerWishlistRepository.getByCustomerPhone(customerPhone);
-        Set<Product> products = customerWishlist.getProducts();
-        Product p = productRepository.getProductByCode(productCode);
-        if (p == null) throw new ProductNotFound(productCode);
-        products.remove(p);
-        customerWishlistRepository.save(customerWishlist);
+        Customer customer = customerRepository.findById(customerPhone).orElseThrow(() -> new CustomerNotFound(customerPhone));
+        Product product = productRepository.findById(productCode).orElseThrow(() -> new ProductNotFound(productCode));
+        WishlistProductsId id = new WishlistProductsId(customer.getPhone(), product.getCode());
+        wislistProductRepository.deleteById(id);
     }
 
     @Override
@@ -212,57 +197,60 @@ public class CustomerServiceImpl implements CustomerService {
 
     @Override
     public List<CartProduct> getCustomerCart(long customerPhone) {
-        return customerCartRepository.findAllByCustomerPhone(customerPhone).stream()
-                                     .map(i -> CartProduct.fromProduct(
-                                             productRepository.getProductByCode(
-                                                     i.getSku().substring(0, i.getSku().lastIndexOf('-'))),
-                                             i.getSku(),
-                                             i.getQuantity(), i.getId())).toList();
+        customerRepository.findById(customerPhone).orElseThrow(() -> new CustomerNotFound(customerPhone));
+        return customerCartRepository.findAllByCustomer_Phone(customerPhone).stream()
+                .map(i -> CartProduct.fromProduct(
+                        productRepository.getProductByCode(
+                                i.getSku().substring(0, i.getSku().lastIndexOf('-'))),
+                        i.getSku(),
+                        i.getQuantity(), customerPhone)).toList();
     }
 
     @Override
     public List<CartProduct> addToCustomerCart(long customerPhone, CartProduct cartItem) {
-        cartItem.setCustomerPhone(customerPhone);
+        Customer customer = customerRepository.findById(customerPhone).orElseThrow(() -> new CustomerNotFound(customerPhone));
+        cartItem.setCustomer(customer);
         if (productVariantRepository.findBySku(cartItem.getSku()) == null)
             throw new ProductNotFound(cartItem.getSku());
-        CartProduct existingCp = customerCartRepository.findCartProductByCustomerPhoneAndSku(customerPhone,
+        CartProduct existingCp = customerCartRepository.findCartProductByCustomer_PhoneAndSku(customerPhone,
                 cartItem.getSku());
         if (existingCp != null) {
             cartItem.setId(existingCp.getId());
         }
         customerCartRepository.save(cartItem);
-        return customerCartRepository.findAllByCustomerPhone(customerPhone).stream()
-                                     .map(i -> CartProduct.fromProduct(
-                                             productRepository.getProductByCode(
-                                                     i.getSku().substring(0, i.getSku().lastIndexOf('-'))),
-                                             i.getSku(),
-                                             i.getQuantity(), i.getId())).toList();
+        return customerCartRepository.findAllByCustomer_Phone(customerPhone).stream()
+                .map(i -> CartProduct.fromProduct(
+                        productRepository.getProductByCode(
+                                i.getSku().substring(0, i.getSku().lastIndexOf('-'))),
+                        i.getSku(),
+                        i.getQuantity(), customerPhone)).toList();
     }
 
     @Override
     public List<CartProduct> editCustomerCart(long customerPhone, CartProduct cartItem) {
-        cartItem.setCustomerPhone(customerPhone);
+        customerRepository.findById(customerPhone).orElseThrow(() -> new CustomerNotFound(customerPhone));
+//        cartItem.setCustomerPhone(customerPhone);
         if (productVariantRepository.findBySku(cartItem.getSku()) == null)
             throw new ProductNotFound(cartItem.getSku());
         if (cartItem.getQuantity() == 0) customerCartRepository.delete(cartItem);
         else customerCartRepository.save(cartItem);
-        return customerCartRepository.findAllByCustomerPhone(customerPhone).stream()
-                                     .map(i -> CartProduct.fromProduct(
-                                             productRepository.getProductByCode(
-                                                     i.getSku().substring(0, i.getSku().lastIndexOf('-'))),
-                                             i.getSku(),
-                                             i.getQuantity(), i.getId())).toList();
+        return customerCartRepository.findAllByCustomer_Phone(customerPhone).stream()
+                .map(i -> CartProduct.fromProduct(
+                        productRepository.getProductByCode(
+                                i.getSku().substring(0, i.getSku().lastIndexOf('-'))),
+                        i.getSku(),
+                        i.getQuantity(), customerPhone)).toList();
     }
 
     @Override
     public List<CartProduct> removeFromCustomerCart(long customerPhone, CartProduct cartItem) {
-        customerCartRepository.deleteById(cartItem.getId());
-        return customerCartRepository.findAllByCustomerPhone(customerPhone).stream()
-                                     .map(i -> CartProduct.fromProduct(
-                                             productRepository.getProductByCode(
-                                                     i.getSku().substring(0, i.getSku().lastIndexOf('-'))),
-                                             i.getSku(),
-                                             i.getQuantity(), i.getId())).toList();
+//        customerCartRepository.deleteById(cartItem.getId());
+        return customerCartRepository.findAllByCustomer_Phone(customerPhone).stream()
+                .map(i -> CartProduct.fromProduct(
+                        productRepository.getProductByCode(
+                                i.getSku().substring(0, i.getSku().lastIndexOf('-'))),
+                        i.getSku(),
+                        i.getQuantity(), customerPhone)).toList();
     }
 
 }

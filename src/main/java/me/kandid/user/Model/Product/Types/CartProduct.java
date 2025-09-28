@@ -3,6 +3,7 @@ package me.kandid.user.Model.Product.Types;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
 import lombok.Data;
+import me.kandid.user.Model.Customer.Customer;
 import me.kandid.user.Model.Product.Visuals;
 
 import java.time.Instant;
@@ -16,24 +17,27 @@ import java.util.Objects;
         description = "Product with it's quantity"
 )
 public class CartProduct {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @EmbeddedId
     @Schema(
             title = "Randomly generated id",
             description = "Randomly generated id for internal tracking"
     )
-    private long id;
+    private CartProductId id;
     @Schema(
             title = "Customer's Phone",
             description = "Customer's Phone, used internally"
     )
-    private long customerPhone;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @MapsId("customerPhone")
+    @JoinColumn(name = "phone")
+    private Customer customer;
 
     @Schema(
             description = "Unique product sku identifier",
             example = "PROD001-WHITE-XL",
             required = true
     )
+    @MapsId("productId")
     private String sku;
 
     @Column(
@@ -102,14 +106,14 @@ public class CartProduct {
     )
     private int availableStock;
 
-    public static CartProduct fromProduct(Product product, String sku, int quantity, long id) {
+    public static CartProduct fromProduct(Product product, String sku, int quantity, long customerPhone) {
         CartProduct item = new CartProduct();
-        item.id = id;
+        item.id = new CartProductId(customerPhone, sku);
         item.sku = sku;
         item.similarSizes = product.getInventory().stream().map(i -> new AvailSizes(i.getSku(), i.getAvailableStock()))
-                                   .toList();
+                .toList();
         item.availableStock = product.getInventory().stream().filter(q -> Objects.equals(q.getSku(), sku)).toList()
-                                     .getFirst().getAvailableStock();
+                .getFirst().getAvailableStock();
         item.productCode = product.getCode();
         item.name = product.getName();
         item.description = product.getDescription();
@@ -139,3 +143,4 @@ public class CartProduct {
         }
     }
 }
+

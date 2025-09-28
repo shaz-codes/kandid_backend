@@ -91,7 +91,7 @@ public class CustomerAddressController {
         CustomerAddress add = customerService.getCustomerAddress(id);
         if (add == null) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        } else if (Utils.decodePhoneFromJWT(token) == add.getCustomerPhone()) {
+        } else if (Utils.decodePhoneFromJWT(token) == add.getCustomer().getPhone()) {
             return new ResponseEntity<>(add, HttpStatus.OK);
         }
         return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
@@ -115,8 +115,7 @@ public class CustomerAddressController {
     public ResponseEntity<CustomerAddress> saveAddress(@RequestHeader(name = "Authorization") String token,
                                                        @RequestBody CustomerAddress customerAddress) {
         long phone = Utils.decodePhoneFromJWT(token);
-        customerAddress.setCustomerPhone(phone);
-        return new ResponseEntity<>(customerService.addCustomerAddress(customerAddress), HttpStatus.OK);
+        return new ResponseEntity<>(customerService.addCustomerAddress(customerAddress, phone), HttpStatus.OK);
     }
 
     @PutMapping("update")
@@ -137,8 +136,7 @@ public class CustomerAddressController {
     public ResponseEntity<CustomerAddress> updateAddress(@RequestHeader(name = "Authorization") String token,
                                                          @RequestBody CustomerAddress customerAddress) {
         long phone = Utils.decodePhoneFromJWT(token);
-        customerAddress.setCustomerPhone(phone);
-        return new ResponseEntity<>(customerService.updateCustomerAddress(customerAddress), HttpStatus.OK);
+        return new ResponseEntity<>(customerService.updateCustomerAddress(customerAddress, phone), HttpStatus.OK);
     }
 
     @DeleteMapping("delete")
@@ -156,8 +154,7 @@ public class CustomerAddressController {
     public ResponseEntity<String> deleteAddress(@RequestHeader(name = "Authorization") String token,
                                                 @RequestBody CustomerAddress customerAddress) {
         long phone = Utils.decodePhoneFromJWT(token);
-        customerAddress.setCustomerPhone(phone);
-        customerService.deleteCustomerAddress(customerAddress);
+        customerService.deleteCustomerAddress(customerAddress, phone);
         return new ResponseEntity<>("Deleted", HttpStatus.OK);
     }
 }

@@ -43,6 +43,9 @@ public class CustomerOrder {
     )
     private long customerPhone;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    private Customer customer;
+
     @CreationTimestamp
     @Column(updatable = false)
     @Schema(
@@ -213,7 +216,7 @@ public class CustomerOrder {
 
     public void setCustomerAddress(CustomerAddress address) {
         this.customerName = address.getCustomerName();
-        this.customerPhone = address.getCustomerPhone();
+        this.customerPhone = address.getCustomer().getPhone();
         this.line1 = address.getLine1();
         this.city = address.getCity();
         this.state = address.getState();
