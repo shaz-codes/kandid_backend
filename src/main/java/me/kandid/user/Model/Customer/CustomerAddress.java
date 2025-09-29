@@ -29,7 +29,7 @@ public class CustomerAddress {
             example = "9161086557"
     )
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "phone")
+//    @JoinColumn(name = "phone")
     private Customer customer;
     @Schema(
             title = "Address Line 1",

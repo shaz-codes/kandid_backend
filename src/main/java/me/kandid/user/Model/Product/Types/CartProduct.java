@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
 import lombok.Data;
 import me.kandid.user.Model.Customer.Customer;
+import me.kandid.user.Model.Product.ProductVariant;
 import me.kandid.user.Model.Product.Visuals;
 
 import java.time.Instant;
@@ -29,16 +30,15 @@ public class CartProduct {
     )
     @ManyToOne(fetch = FetchType.LAZY)
     @MapsId("customerPhone")
-    @JoinColumn(name = "phone")
     private Customer customer;
 
+    @ManyToOne(fetch = FetchType.LAZY)
     @Schema(
             description = "Unique product sku identifier",
-            example = "PROD001-WHITE-XL",
             required = true
     )
     @MapsId("productId")
-    private String sku;
+    private ProductVariant sku;
 
     @Column(
             nullable = false
@@ -109,7 +109,7 @@ public class CartProduct {
     public static CartProduct fromProduct(Product product, String sku, int quantity, long customerPhone) {
         CartProduct item = new CartProduct();
         item.id = new CartProductId(customerPhone, sku);
-        item.sku = sku;
+        item.sku = new ProductVariant();
         item.similarSizes = product.getInventory().stream().map(i -> new AvailSizes(i.getSku(), i.getAvailableStock()))
                 .toList();
         item.availableStock = product.getInventory().stream().filter(q -> Objects.equals(q.getSku(), sku)).toList()

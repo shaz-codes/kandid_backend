@@ -201,8 +201,8 @@ public class CustomerServiceImpl implements CustomerService {
         return customerCartRepository.findAllByCustomer_Phone(customerPhone).stream()
                 .map(i -> CartProduct.fromProduct(
                         productRepository.getProductByCode(
-                                i.getSku().substring(0, i.getSku().lastIndexOf('-'))),
-                        i.getSku(),
+                                i.getSku().getSku().substring(0, i.getSku().getSku().lastIndexOf('-'))),
+                        i.getSku().getSku(),
                         i.getQuantity(), customerPhone)).toList();
     }
 
@@ -210,10 +210,10 @@ public class CustomerServiceImpl implements CustomerService {
     public List<CartProduct> addToCustomerCart(long customerPhone, CartProduct cartItem) {
         Customer customer = customerRepository.findById(customerPhone).orElseThrow(() -> new CustomerNotFound(customerPhone));
         cartItem.setCustomer(customer);
-        if (productVariantRepository.findBySku(cartItem.getSku()) == null)
-            throw new ProductNotFound(cartItem.getSku());
-        CartProduct existingCp = customerCartRepository.findCartProductByCustomer_PhoneAndSku(customerPhone,
-                cartItem.getSku());
+        if (productVariantRepository.findBySku(cartItem.getSku().getSku()) == null)
+            throw new ProductNotFound(cartItem.getSku().getSku());
+        CartProduct existingCp = customerCartRepository.findCartProductByCustomer_PhoneAndSku_Sku(customerPhone,
+                cartItem.getSku().getSku());
         if (existingCp != null) {
             cartItem.setId(existingCp.getId());
         }
@@ -221,8 +221,8 @@ public class CustomerServiceImpl implements CustomerService {
         return customerCartRepository.findAllByCustomer_Phone(customerPhone).stream()
                 .map(i -> CartProduct.fromProduct(
                         productRepository.getProductByCode(
-                                i.getSku().substring(0, i.getSku().lastIndexOf('-'))),
-                        i.getSku(),
+                                i.getSku().getSku().substring(0, i.getSku().getSku().lastIndexOf('-'))),
+                        i.getSku().getSku(),
                         i.getQuantity(), customerPhone)).toList();
     }
 
@@ -230,15 +230,15 @@ public class CustomerServiceImpl implements CustomerService {
     public List<CartProduct> editCustomerCart(long customerPhone, CartProduct cartItem) {
         customerRepository.findById(customerPhone).orElseThrow(() -> new CustomerNotFound(customerPhone));
 //        cartItem.setCustomerPhone(customerPhone);
-        if (productVariantRepository.findBySku(cartItem.getSku()) == null)
-            throw new ProductNotFound(cartItem.getSku());
+        if (productVariantRepository.findBySku(cartItem.getSku().getSku()) == null)
+            throw new ProductNotFound(cartItem.getSku().getSku());
         if (cartItem.getQuantity() == 0) customerCartRepository.delete(cartItem);
         else customerCartRepository.save(cartItem);
         return customerCartRepository.findAllByCustomer_Phone(customerPhone).stream()
                 .map(i -> CartProduct.fromProduct(
                         productRepository.getProductByCode(
-                                i.getSku().substring(0, i.getSku().lastIndexOf('-'))),
-                        i.getSku(),
+                                i.getSku().getSku().substring(0, i.getSku().getSku().lastIndexOf('-'))),
+                        i.getSku().getSku(),
                         i.getQuantity(), customerPhone)).toList();
     }
 
@@ -248,8 +248,8 @@ public class CustomerServiceImpl implements CustomerService {
         return customerCartRepository.findAllByCustomer_Phone(customerPhone).stream()
                 .map(i -> CartProduct.fromProduct(
                         productRepository.getProductByCode(
-                                i.getSku().substring(0, i.getSku().lastIndexOf('-'))),
-                        i.getSku(),
+                                i.getSku().getSku().substring(0, i.getSku().getSku().lastIndexOf('-'))),
+                        i.getSku().getSku(),
                         i.getQuantity(), customerPhone)).toList();
     }
 

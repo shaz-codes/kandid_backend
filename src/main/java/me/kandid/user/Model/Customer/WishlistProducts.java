@@ -18,7 +18,7 @@ public class WishlistProducts {
     private Customer customer;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @MapsId("productCode")
+    @MapsId("product_code")
     @JoinColumn(name = "product_code")
     private Product product;
 

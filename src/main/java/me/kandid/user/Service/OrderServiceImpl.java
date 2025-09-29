@@ -78,7 +78,7 @@ public class OrderServiceImpl implements OrderService {
 
         CustomerOrder customerOrder = new CustomerOrder();
         customerOrder.setId(orderId);
-        customerOrder.setCustomerPhone(customerPhone);
+//        customerOrder.setCustomerPhone(customerPhone);
         customerOrder.setType(orderRequest.getOrderType());
 
         CustomerAddress address = customerAddressRepository.getCustomerAddressByIdAndCustomerPhone(
@@ -187,7 +187,7 @@ public class OrderServiceImpl implements OrderService {
 
         CustomerOrder customerOrder = new CustomerOrder();
         customerOrder.setId(orderId);
-        customerOrder.setCustomerPhone(customerPhone);
+//        customerOrder.setCustomerPhone(customerPhone);
         customerOrder.setType(orderRequest.getOrderType());
 
         CustomerAddress address = customerAddressRepository.getCustomerAddressByIdAndCustomerPhone(
@@ -280,6 +280,7 @@ public class OrderServiceImpl implements OrderService {
             throw new ProductNotInStock(sku);
         }
         variant.setAvailableStock(variant.getAvailableStock() - quantity);
+//        TODO: FIXXXXXXXXX
         Product p = productRepository.getProductByCode(variant.getProductCode());
         OrderProduct orderProduct = OrderProduct.fromProduct(p, variant.getSku(), quantity);
         orderProducts.add(orderProduct);
@@ -304,7 +305,7 @@ public class OrderServiceImpl implements OrderService {
             if (cartItems.isEmpty())
                 throw new RuntimeException("Cart is empty");
             for (CartProduct item : cartItems) {
-                processOrder(item.getQuantity(), variants, items, item.getSku());
+                processOrder(item.getQuantity(), variants, items, item.getSku().getSku());
             }
         }
         return items;

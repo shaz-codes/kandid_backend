@@ -13,5 +13,5 @@ public interface CustomerCartRepository extends JpaRepository<CartProduct, CartP
 
     void deleteAllByCustomer_Phone(long customerPhone);
 
-    CartProduct findCartProductByCustomer_PhoneAndSku(long customerPhone, String sku);
+    CartProduct findCartProductByCustomer_PhoneAndSku_Sku(long customerPhone, String skuSku);
 }
